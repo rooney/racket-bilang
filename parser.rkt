@@ -5,7 +5,7 @@ expres : /feeds? expr4
 @expr3 : apply3|macro3|combo
        | exprZ
 @exprZ : combo0|combo1
-       | macro1
+       | macro0|macro1|macroL
        | expr2
 @expr2 : apply2|comma
        | exprK
@@ -27,23 +27,24 @@ expres : /feeds? expr4
        | this
        | e
 
-@m1    : (expr1|comma1|comma0|comma|combo1|combo0|combo) /SPACE
-@mL    : expr1 /SPACE
-@mR    : /SPACE (exprK|macroL)
-@m3    : mR? /feeds expr3
-macro1 : m1? @macroR | m1 op
-macroL : mL? @macroR | mL op
-macroR :     op mR
-macro3 : m1? op m3
+@m1    : (comma|comma0|comma1|expr1) /SPACE
+@mL    : (combo|combo0|combo1)       /SPACE
+@mR    :                             /SPACE (exprK|macro1)
+macro0 :          op
+macro1 :          op mR
+       |  m1      op mR?
+macroL :     mL   op mR?
+macro2 : (m1|mL)? op mR? dent
+macro3 : (m1|mL)? op mR? dent? /feeds expr3
 
 @comma : (comma0|comma1|expr1) /SPACE? /COMMA
 @combo : (combo0|combo1)       /SPACE? /COMMA
-       | exprZ                 /NEWLINE /COMMA
+       |                exprZ  /NEWLINE /COMMA
 
-comma0 :  comma        (prop|op|grouping)+
-combo0 :  combo        (prop|op|grouping)+
 comma1 : (comma|comma0) /SPACE expr1
 combo1 : (combo|combo0) /SPACE expr1
+comma0 :  comma         (prop|op|grouping)+
+combo0 :  combo         (prop|op|grouping)+
 
 apply3 : expr2 /feeds expr3
 apply2 : (expr1|comma0|combo0|comma|combo) dent
@@ -66,7 +67,7 @@ key    : idx | (OP|ID|INTEGER|DECIMAL)+
 atom   : (COLON @key?)? COLON @idx?
 prop   : /DOT (OP|OP? @id|grouping)
 this   : /THIS
-feeds  : /NEWLINE+
+feeds  : /(NEWLINE|pseudent)+
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
 interp : INTERPOLATE (brace|dent)
@@ -76,10 +77,11 @@ paren     : /LPAREN grouped? /RPAREN
 bracket   : /LBRACK grouped? /RBRACK
 brace     : /LBRACE grouped? /RBRACE
 bottom    : /LBRACE /SPREAD  /RBRACE
-generator : /LBRACE /SPREAD /SPACE expr4 /SPACE? /RBRACE
-          | /LBRACE /SPREAD (id|@dent /feeds)    /RBRACE
+generator : /LBRACE /SPREAD /SPACE expr4      /RBRACE
+          | /LBRACE /SPREAD (id|@dent) /RBRACE
 @grouped  : /SPACE? expr4 /SPACE?
           | @dent /feeds
           | OP
 spread    : /SPREAD (id|grouped)
-dent      : /INDENT /feeds? expr4 /DEDENT
+dent      : /INDENT expres    /DEDENT
+pseudent  : /INDENT pseudent? /DEDENT
