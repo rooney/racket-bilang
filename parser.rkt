@@ -18,7 +18,6 @@ expres : /feeds? expr4
        | xtend
        | exprO
 @exprO : applyO
-       | bottom
        | atom
        | exprG
 @exprG : applyG
@@ -78,12 +77,12 @@ interp : INTERPOLATE (brace|indent)
 paren     : /LPAREN grouped? /RPAREN
 bracket   : /LBRACK grouped? /RBRACK
 brace     : /LBRACE grouped? /RBRACE
-bottom    : /LBRACE /DOTDOT  /RBRACE
 generator : /LBRACE /DOTDOT /SPACE expr4 /RBRACE
           | /LBRACE /DOTDOT (id|@indent) /RBRACE
 @grouped  : /SPACE? expr4 /SPACE?
           | @indent /feeds
           | OP
+          | DOTDOT
 xtend     : /DOTDOT (id|grouped)
 indent    : /INDENT expres /DEDENT
 pseudent  : /INDENT pseudent? /DEDENT
