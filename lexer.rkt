@@ -36,7 +36,7 @@
    [identifier (token 'ID (string->symbol lexeme))]
    [integer    (begin (push-mode! shortid-lexer) (token 'INTEGER (string->number lexeme)))]
    [decimal    (begin (push-mode! shortid-lexer) (token 'DECIMAL (string->number lexeme)))]
-   [".." (token 'SPREAD ''SPREAD)]
+   [".." (token 'DOTDOT ''DOTDOT)]
    [",," (error (string-append "Unexpected " lexeme))]
    ["{," (list (token-LBRACE!) (token 'THIS ''THIS))]
    [(:seq s-quote nextlox) s-block]
