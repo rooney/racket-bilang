@@ -22,9 +22,9 @@ expres : /feeds? expr4
        | exprG
 @exprG : applyG
        | grouping
+       | this
        | expr0
 @expr0 : apply0
-       | this
        | dot
        | e
 
