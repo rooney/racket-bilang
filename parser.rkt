@@ -84,7 +84,7 @@ generator : /LBRACE /DOTDOT /SPACE expr4 /RBRACE
           | /LBRACE /DOTDOT (id|@indent) /RBRACE
 @grouped  : /SPACE? expr4 /SPACE?
           | @indent /feeds
-          | OP
+          | op
           | DOTDOT
 xtend     : /DOTDOT (id|grouping)
 indent    : /INDENT expres /DEDENT
