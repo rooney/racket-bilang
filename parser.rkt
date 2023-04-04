@@ -13,9 +13,9 @@ expres : /feeds? expr4
        | expr1
 @expr1 : apply1
        | exprQ
-@exprQ : key /COLON
-       | kv
+@exprQ : kv|key /COLON
        | xtend
+       | prop|field
        | exprO
 @exprO : applyO
        | atom
@@ -68,6 +68,8 @@ key    : idx | (OP|ID|INTEGER|DECIMAL)+
 kv     : key /COLON exprO
 atom   : (COLON key?)? COLON idx?
 dot    : /DOT (OP|OP? @id|grouping)
+field  : /DOT @id /COLON
+prop   : @field exprO
 this   : /THIS
 feeds  : /(NEWLINE|pseudent)+
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
