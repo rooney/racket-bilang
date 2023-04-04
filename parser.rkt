@@ -28,15 +28,16 @@ expres : /feeds? expr4
        | dot
        | e
 
+macro  : DOTDOT|OP
 @m1    : (comma|comma0|comma1|expr1) /SPACE
 @mL    : (split|split0|split1)       /SPACE
 @mR    :                             /SPACE (exprk|macro1|macro0)
-macro0 :          op
-macro1 :          op mR
-       |     m1   op mR?
-macroL :  mL      op mR?
-macro2 : (mL|m1)? op mR? indent
-macro3 : (mL|m1)? op mR? indent? /feeds expr3
+macro0 :          macro
+macro1 :          macro mR
+       |     m1   macro mR?
+macroL :  mL      macro mR?
+macro2 : (mL|m1)? macro mR? indent
+macro3 : (mL|m1)? macro mR? indent? /feeds expr3
 
 @comma : (comma0|comma1|expr1) /SPACE? /COMMA
 @split : (split0|split1)       /SPACE? /COMMA
@@ -83,6 +84,6 @@ generator : /LBRACE /DOTDOT /SPACE expr4 /RBRACE
           | @indent /feeds
           | OP
           | DOTDOT
-xtend     : /DOTDOT (id|grouped)
+xtend     : /DOTDOT (id|grouping)
 indent    : /INDENT expres /DEDENT
 pseudent  : /INDENT pseudent? /DEDENT
