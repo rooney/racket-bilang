@@ -67,8 +67,8 @@ dec    : DECIMAL
 key    : idx | (OP|ID|INTEGER|DECIMAL)+
 kv     : key /COLON exprO
 atom   : (COLON key?)? COLON idx?
-dot    : /DOT (OP|OP? @id|grouping)
-field  : /DOT @id /COLON
+dot    : /DOT (OP|OP? ID|grouping)
+field  : /DOT (OP|ID) /COLON
 prop   : @field exprO
 this   : /THIS
 feeds  : /(NEWLINE|pseudent)+
