@@ -5,7 +5,7 @@ expres : /feeds? expr4
 @expr3 : apply3|macro3|cline
        | expr2
 @expr2 : apply2|macro2
-       | macroL|macro1|macro0
+       | macroL|macro1
        | exprL
 @exprL : cline1|cline0
        | exprk
@@ -31,8 +31,7 @@ expres : /feeds? expr4
 macro  : DOTDOT|OP
 @m1    : (comma|comma0|comma1|expr1) /SPACE
 @mL    : (cline|cline0|cline1)       /SPACE
-@mR    :                             /SPACE (exprk|macro1|macro0)
-macro0 :          macro
+@mR    :                             /SPACE (exprk|macro1)
 macro1 :          macro mR
        |     m1   macro mR?
 macroL :  mL      macro mR?
