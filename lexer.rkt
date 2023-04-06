@@ -37,7 +37,7 @@
    [decimal    (begin (push-mode! shortid-lexer) (token 'DECIMAL (string->number lexeme)))]
    [".." (token 'DOTDOT ''DOTDOT)]
    [",," (error (string-append "Unexpected " lexeme))]
-   [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'THIS ''THIS))]
+   [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'HOLE ''HOLE))]
    [(:seq s-quote nextloc) s-block]
    [(:seq d-quote nextloc) d-block]
    [(:seq b-quote nextloc) b-block]
@@ -54,7 +54,7 @@
    [#\: (token 'COLON ''COLON)]
    [#\; (token 'SEMICOLON ''SEMICOLON)]
    [#\, (if (equal? 'INDENT (token-struct-type (srcloc-token-token _last-token)))
-            (token 'THIS ''THIS)
+            (token 'HOLE ''HOLE)
             (token 'COMMA ''COMMA))]
    [(eof) (if (> _level 0)
               (reset-level! 0) 

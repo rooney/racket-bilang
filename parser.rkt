@@ -18,11 +18,9 @@ expres : /feeds? expr4
        | xtend
        | exprO
 @exprO : applyO
+       | hole
        | atom
-       | exprG
-@exprG : applyG
        | grouping
-       | this
        | expr0
 @expr0 : apply0
        | dot
@@ -51,8 +49,7 @@ cline0 : cline (dot|op|grouping)+
 apply3 : (exprL|apply2) /feeds expr3
 apply2 :  exprL indent
 apply1 :  exprQ /SPACE expr1
-applyO : (exprG|op) (dot|op)+
-applyG : (exprO|op) grouping+
+applyO : (exprO|op) (dot|op|grouping)+
 apply0 : (expr0|op) e
 @e     : id
        | int|dec
@@ -70,7 +67,7 @@ prop   : @field  /COLON exprO
 atom   : pubkey? /COLON idx?
 field  : /DOT (OP|OP? ID)
 dot    : /DOT (OP|OP? ID|grouping)
-this   : /THIS
+hole   : /HOLE
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
 interp : INTERPOLATE (brace|indent)
