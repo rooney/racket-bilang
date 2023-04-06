@@ -9,11 +9,10 @@
   (alnum (:/ #\a #\z #\A #\Z #\0 #\9))
   (identifier (:seq alpha (:* alnum) (:* (:seq (:or "+" "/" "-" "<-" "->") (:+ alnum))) prime?))
   (shortid    (:seq alpha (:* alnum)                                                    prime?))
-  (operator (:+ (char-set "+/-><=*\\~?!&|^#%$@_;")))
+  (operator (:+ (char-set "+/-><=*\\~?!&|^#%$@_")))
   (newline-char (char-set "\r\n"))
   (newline (:seq (:? spacetabs) (:or "\r\n" "\n")))
-  (nextlox (:seq (:+ newline) (:* #\tab)))
-  (nextloc (:seq     newline  (:* #\tab)))
+  (nextloc (:seq (:+ newline) (:* #\tab)))
   (s-quote #\')
   (d-quote #\")
   (b-quote #\`)
@@ -38,10 +37,10 @@
    [decimal    (begin (push-mode! shortid-lexer) (token 'DECIMAL (string->number lexeme)))]
    [".." (token 'DOTDOT ''DOTDOT)]
    [",," (error (string-append "Unexpected " lexeme))]
-   ["{," (list (token-LBRACE!) (token 'THIS ''THIS))]
-   [(:seq s-quote nextlox) s-block]
-   [(:seq d-quote nextlox) d-block]
-   [(:seq b-quote nextlox) b-block]
+   [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'THIS ''THIS))]
+   [(:seq s-quote nextloc) s-block]
+   [(:seq d-quote nextloc) d-block]
+   [(:seq b-quote nextloc) b-block]
    [s-quote s-str]
    [d-quote d-str]
    [b-quote b-str]
@@ -51,10 +50,12 @@
    [#\} (token-RBRACE!)]
    [#\[ (token-LBRACK!)]
    [#\] (token-RBRACK!)]
-   [#\. (token 'DOT       ''DOT)]
-   [#\, (token 'COMMA     ''COMMA)]
-   [#\: (token 'COLON     ''COLON)]
+   [#\. (token 'DOT ''DOT)]
+   [#\: (token 'COLON ''COLON)]
    [#\; (token 'SEMICOLON ''SEMICOLON)]
+   [#\, (if (equal? 'INDENT (token-struct-type (srcloc-token-token _last-token)))
+            (token 'THIS ''THIS)
+            (token 'COMMA ''COMMA))]
    [(eof) (if (> _level 0)
               (reset-level! 0) 
               (void))]))
@@ -116,7 +117,7 @@
 (define-macro (blockstr STR-LEXER CUSTOM-RULES ...)
   #'(STR-LEXER ()
                CUSTOM-RULES ...
-               [nextlox (extract-whites!)]))
+               [nextloc (extract-whites!)]))
 
 (define-macro (blockstr-lexi CUSTOM-RULES ...)
   #'(blockstr str-lexi
@@ -182,6 +183,7 @@
 (define (debug x)
   (println x) x)
 
+(define _last-token null)
 (define _pending-tokens (list))
 (define _indents (list))
 (define _modestack (list))
@@ -214,7 +216,7 @@
   (append (list (token 'DEDENT _mode))
           (append-if (equal? _mode dedent->unquote) (dedent->unquote))))
 
-(define dedent->unquote 
+(define dedent->unquote
   (lambda () (token-UNQUOTE!)))
 
 (define-macro (measure-dent!)
@@ -326,20 +328,22 @@
            (token 'STRING lexeme)))
 
 (define (bilang-lexer ip)
-  (if (empty? _pending-tokens)
-      (let* ([produce (_mode ip)]
-             [tokens (and (srcloc-token? produce) 
-                          (srcloc-token-token produce))])
-        (cond
-          [(empty? tokens) (bilang-lexer ip)]
-          [(list? tokens)
-           (let ([prods (map (lambda (t)
-                               (if (srcloc-token? t) t
-                                   (srcloc-token t (srcloc-token-srcloc produce))))
-                             tokens)])
-             (set! _pending-tokens (cdr prods))
-             (car prods))]
-          [else produce]))
-      (pop! _pending-tokens)))
+  (set! _last-token
+        (if (empty? _pending-tokens)
+            (let* ([produce (_mode ip)]
+                   [tokens (and (srcloc-token? produce) 
+                                (srcloc-token-token produce))])
+              (cond
+                [(empty? tokens) (bilang-lexer ip)]
+                [(list? tokens)
+                 (let ([prods (map (lambda (t)
+                                     (if (srcloc-token? t) t
+                                         (srcloc-token t (srcloc-token-srcloc produce))))
+                                   tokens)])
+                   (set! _pending-tokens (cdr prods))
+                   (car prods))]
+                [else produce]))
+            (pop! _pending-tokens)))
+  _last-token)
 
 (provide bilang-lexer)
