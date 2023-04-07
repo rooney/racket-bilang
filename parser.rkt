@@ -7,9 +7,9 @@ expres : /feeds? expr4
 @expr2 : apply2|macro2
        | macroL|macro1
        | exprL
-@exprL : cline1|cline0
+@exprL : cline1|clineO
        | exprk
-@exprk : comma1|comma0|comma
+@exprk : comma1|commaO|comma
        | expr1
 @expr1 : apply1
        | exprQ
@@ -19,16 +19,16 @@ expres : /feeds? expr4
        | exprO
 @exprO : applyO
        | hole
+       | dot
        | atom
        | grouping
        | expr0
 @expr0 : apply0
-       | dot
        | e
 
 macro  : DOTDOT|OP
-@m1    : (comma|comma0|comma1|expr1) /SPACE
-@mL    : (cline|cline0|cline1)       /SPACE
+@m1    : (comma|commaO|comma1|expr1) /SPACE
+@mL    : (cline|clineO|cline1)       /SPACE
 @mR    :                             /SPACE (exprk|macro1)
 macro1 :          macro mR
        |     m1   macro mR?
@@ -36,21 +36,22 @@ macroL :  mL      macro mR?
 macro2 : (mL|m1)? macro mR? indent
 macro3 : (mL|m1)? macro mR? indent? /feeds expr3
 
-@comma : (comma0|comma1|expr1) /SPACE?  /COMMA
-@cline : (cline0|cline1)       /SPACE?  /COMMA
+@comma : (commaO|comma1|expr1) /SPACE?  /COMMA
+@cline : (clineO|cline1)       /SPACE?  /COMMA
        |                expr2  /NEWLINE /COMMA
 
-comma1 : (comma|comma0) /SPACE expr1
-cline1 : (cline|cline0) /SPACE expr1
+comma1 : (comma|commaO) /SPACE expr1
+cline1 : (cline|clineO) /SPACE expr1
 
-comma0 : comma (dot|op|grouping)+
-cline0 : cline (dot|op|grouping)+
+commaO : comma (op|dot|grouping)+
+clineO : cline (op|dot|grouping)+
 
 apply3 : (exprL|apply2) /feeds expr3
 apply2 :  exprL indent
 apply1 :  exprQ /SPACE expr1
-applyO : (exprO|op) (dot|op|grouping)+
-apply0 : (expr0|op) e
+applyO :  exprO(op|dot|grouping)+
+       |        op(dot|grouping)+
+apply0 : (expr0|op)e
 @e     : id
        | int|dec
        | string
