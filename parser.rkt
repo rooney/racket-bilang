@@ -67,7 +67,7 @@ keyval : @key    /COLON exprO
 prop   : @field  /COLON exprO
 atom   : pubkey? /COLON idx?
 field  : /DOT (OP|OP? ID)
-dot    : /DOT (OP|OP? ID|grouping)
+dot    : /DOT (OP|OP? ID|int|grouping)
 hole   : /HOLE
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
