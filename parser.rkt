@@ -15,13 +15,13 @@ expres : /feeds? expr4
        | exprQ
 @exprQ : keyval|key /COLON
        | prop|field /COLON
+       | quote
        | xtend
        | exprO
 @exprO : applyO
+       | circle
        | hole
        | dot
-       | atom
-       | grouping
        | expr0
 @expr0 : apply0
        | e
@@ -43,14 +43,14 @@ macro3 : (mL|m1)? macro mR? indent? /feeds expr3
 comma1 : (comma|commaO) /SPACE expr1
 cline1 : (cline|clineO) /SPACE expr1
 
-commaO : comma (op|dot|grouping)+
-clineO : cline (op|dot|grouping)+
+commaO : comma (op|dot|circle)+
+clineO : cline (op|dot|circle)+
 
 apply3 : (exprL|apply2) /feeds expr3
 apply2 :  exprL indent
 apply1 :  exprQ /SPACE expr1
-applyO :  exprO(op|dot|grouping)+
-       |        op(dot|grouping)+
+applyO :  exprO(op|dot|circle)+
+       |        op(dot|circle)+
 apply0 : (expr0|op)e
 @e     : id
        | int|dec
@@ -58,32 +58,32 @@ apply0 : (expr0|op)e
 
 op     : OP
 id     : ID
-idx    : ID (/DOT ID)*
+@idx   : ID (/DOT ID)*
 int    : INTEGER
 dec    : DECIMAL
 key    : idx | (OP|ID|INTEGER|DECIMAL)+
-pubkey :         /COLON key?
 keyval : @key    /COLON exprO
 prop   : @field  /COLON exprO
-atom   : pubkey? /COLON idx?
+pubkey :         /COLON (key|braces)?
+quote  : pubkey? /COLON (idx|braces)?
 field  : /DOT (OP|OP? ID)
-dot    : /DOT (OP|OP? ID|int|grouping)
+dot    : /DOT (OP|OP? ID|int|circle)
 hole   : /HOLE
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
-interp : INTERPOLATE (brace|indent)
+interp : INTERPOLATE (braces|indent)
 
-@grouping : paren|bracket|brace|generator
-paren     : /LPAREN grouped? /RPAREN
-bracket   : /LBRACK grouped? /RBRACK
-brace     : /LBRACE grouped? /RBRACE
-generator : /LBRACE /DOTDOT /SPACE expr4 /RBRACE
-          | /LBRACE /DOTDOT (id|@indent) /RBRACE
-@grouped  : /SPACE? expr4 /SPACE?
-          | @indent /feeds
-          | op
-          | DOTDOT
-xtend     : /DOTDOT (id|grouping)
-indent    : /INDENT expres /DEDENT
-pseudent  : /INDENT pseudent? /DEDENT
-feeds     : /(NEWLINE|pseudent)+
+@circle  : parens|brackets|braces|loop
+parens   : /LPAREN group? /RPAREN
+brackets : /LBRACK group? /RBRACK
+braces   : /LBRACE group? /RBRACE
+loop     : /LBRACE /DOTDOT /SPACE expr4 /RBRACE
+         | /LBRACE /DOTDOT (id|@indent) /RBRACE
+@group   : /SPACE? expr4 /SPACE?
+         | @indent /feeds
+         | op
+         | DOTDOT
+xtend    : /DOTDOT (id|circle)
+indent   : /INDENT expres /DEDENT
+pseudent : /INDENT pseudent? /DEDENT
+feeds    : /(NEWLINE|pseudent)+
