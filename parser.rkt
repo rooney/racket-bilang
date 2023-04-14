@@ -13,8 +13,8 @@ expres : /feeds? expr4
        | expr1
 @expr1 : apply1
        | exprQ
-@exprQ : keyval|key /COLON
-       | prop|field /COLON
+@exprQ : key|kv
+       | field|prop
        | quote
        | xtend
        | exprO
@@ -61,13 +61,13 @@ id     : ID
 @idx   : ID (/DOT ID)*
 int    : INTEGER
 dec    : DECIMAL
-key    : idx | (OP|ID|INTEGER|DECIMAL)+
-keyval : @key    /COLON exprO
-prop   : @field  /COLON exprO
-pubkey :         /COLON (key|braces)?
-quote  : pubkey? /COLON (idx|braces)?
-field  : /DOT (OP|OP? ID)
-dot    : /DOT (OP|OP? ID|int|circle)
+@pub   : (OP|ID|INTEGER|DECIMAL)+|idx|braces
+quote  : (COLON pub?)?     COLON (idx|braces)?
+key    : pub /COLON
+kv     : @key exprO
+prop   : @field exprO
+field  : /DOT (OP|ID|braces) /COLON
+dot    : /DOT (OP|ID|int|circle)
 hole   : /HOLE
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
