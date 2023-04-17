@@ -75,15 +75,17 @@ interp : INTERPOLATE (braces|indent)
 
 @circle  : parens|brackets|braces|loop
 parens   : /LPAREN group? /RPAREN
-brackets : /LBRACK group? /RBRACK
+brackets : /LBRACK tuple? /RBRACK
 braces   : /LBRACE group? /RBRACE
 loop     : /LBRACE /DOTDOT /SPACE expr4 /RBRACE
          | /LBRACE /DOTDOT (id|@indent) /RBRACE
 @group   : /SPACE? expr4 /SPACE?
-         | @indent /feeds
          | op
+         | @indent /feeds
          | DOTDOT
 xtend    : /DOTDOT (id|circle)
+@tuple   :               /SPACE? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?
+         | /INDENT /hole /SPACE  expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
 indent   : /INDENT expres /DEDENT
 pseudent : /INDENT pseudent? /DEDENT
 feeds    : /(NEWLINE|pseudent)+
