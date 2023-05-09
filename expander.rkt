@@ -5,25 +5,64 @@
 (define-macro (b-module-begin (expres EXPR))
   #'(#%module-begin EXPR))
 
-(define-macro (id X) #'#'X)
+(define (debug x)
+  (println x) x)
 
-(struct Symbol (name pubname)
-  #:methods gen:custom-write
-  [(define (write-proc self outport mode)
-     (fprintf outport ":~a:~a" (Symbol-pubname self) (Symbol-name self)))])
+(define vars (make-hash))
+
+(struct Object (value props))
+
+(struct tag (keyword name values) #:transparent)
+
+(define-macro braces #'syntax)
 
 (define-macro-cases quot
-  [(quot)           #'(Symbol #f #f)]
-  [(quot (pub))     #'(Symbol #f #f)]
-  [(quot (pub P))   #'(Symbol #f #'P)]
-  [(quot (pub) Q)   #'(Symbol #'Q #f)]
-  [(quot (pub P) Q) #'(Symbol #'Q #'P)]
-  [(quot Q)         #'(Symbol #'Q #'Q)])
+  [(quot)           #'(tag ': ': (list))]
+  [(quot (pub))     #'(tag ': ': (list))]
+  [(quot (pub) Q)   #'(tag ': 'Q (list))]
+  [(quot (pub P))   #'(tag 'P ': (list))]
+  [(quot (pub P) Q) #'(tag 'P 'Q (list))]
+  [(quot Q)         #'(tag 'Q 'Q (list))])
 
-(define (apply1 f x) (cons f (list x)))
-(define braces list)
-
+(define string string-append)
 (define parens identity)
 (define int    identity)
+(define dec    identity)
 
-(provide quot apply1 braces parens id int)
+(define-macro (id X)
+  #'(let ([var (hash-ref vars (syntax->datum #'X) #f)])
+      (or var X)))
+
+(define-macro (err-not-function STX)
+  #'(err-cant-apply STX "not a function"))
+
+(define-macro (err-cant-apply STX MSG)
+  #'(parameterize ([current-syntax-context #'|can't apply|])
+      (wrong-syntax STX MSG)))
+
+(define (synt stx value)
+  (datum->syntax #f value (struct-copy srcloc (syntax-srcloc stx))))
+
+(define-macro (blame X)
+  #'(pattern-case X
+                  [(quot Q)   (synt X (string->symbol (string-append ":" (symbol->string (syntax->datum #'Q)))))]
+                  [(string S) (synt X (foldl string-append "" (cdr (syntax->datum #'S))))]
+                  [(int N)    #'N]
+                  [(dec N)    #'N]))
+
+(define-macro (app F X)
+   #'(let ([f F])
+       (cond
+         [(procedure? f) (f X)]
+         [(tag? f) (if (syntax? X) 
+                       (let ([varname (tag-name f)])
+                         (hash-set! vars varname varname)
+                         (eval-syntax #`(lambda (#,varname) #,(eval-syntax X))))
+                       (struct-copy tag f [values (append (tag-values f) (list X))]))]
+         [else (err-not-function (synt #'F f))])))
+
+(define-macro comma1 #'app)
+(define-macro apply1 #'app)
+(define-macro apply3 #'app)
+
+(provide comma1 apply1 apply3 parens braces quot id int dec string)

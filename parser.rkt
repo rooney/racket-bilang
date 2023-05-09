@@ -14,7 +14,7 @@ expres : /feeds? expr4
 @expr1 : apply1
        | exprQ
 @exprQ : key  /COLON | kv
-       | comp /COLON | qual
+       | comp /COLON | prop
        | quot
        | xtend
        | exprO
@@ -64,7 +64,7 @@ dec    : DECIMAL
 key    : (OP|ID|INTEGER|DECIMAL)+|braces|idx
 pub    :       /COLON @key?
 kv     : @key  /COLON exprO
-qual   : @comp /COLON exprO
+prop   : @comp /COLON exprO
 quot   : pub?  /COLON (braces|idx)?
 comp   : /DOT (OP|ID|braces)
 dot    : /DOT (OP|ID|circle|int)
@@ -77,15 +77,15 @@ interp : INTERPOLATE (braces|indent)
 parens   : /LPAREN group? /RPAREN
 brackets : /LBRACK tuple? /RBRACK
 braces   : /LBRACE group? /RBRACE
-loop     : /LBRACE /DOTDOT /SPACE expr4 /RBRACE
-         | /LBRACE /DOTDOT (id|@indent) /RBRACE
+loop     : /LBRACE /DOTDOT (id|@indent) /RBRACE
+         | /LBRACE /DOTDOT /SPACE expr4 /RBRACE
 @group   : /SPACE? expr4 /SPACE?
-         | op
          | @indent /feeds
+         | op
          | DOTDOT
 xtend    : /DOTDOT (id|circle)
-@tuple   :               /SPACE? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?
-         | /INDENT /hole /SPACE  expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
+@tuple   :                /SPACE?  expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?
+         | /INDENT (/hole /SPACE)? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
 indent   : /INDENT expres /DEDENT
 pseudent : /INDENT pseudent? /DEDENT
 feeds    : /(NEWLINE|pseudent)+

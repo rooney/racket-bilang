@@ -101,7 +101,7 @@
 
 (define-macro d-str
   #'(token-QUOTE! (str-lexi (d-quote)
-                            [d-quote (token-UNQUOTE!)]
+                            [d-quote (token-UNQUOTE! lexeme)]
                             [newline-char (error-unterminated-string)]
                             [(:seq #\` nextloc) (str-interp #:dent-or (error-unterminated-string))]
                             [(eof) (error-unterminated-string)])))
@@ -271,13 +271,14 @@
   #'(cond [(empty? _modestack) (error "No matching pair")]
           [else (pop-mode!) (close-group! (token 'RBRACE "}"))]))
 
-(define (token-QUOTE! lexer)
-  (push-mode! lexer)
-  (token 'QUOTE _mode))
+(define-macro (token-QUOTE! LEXER)
+  #'(begin (push-mode! LEXER)
+           (token 'QUOTE lexeme)))
 
-(define (token-UNQUOTE!)
-  (pop-mode!)
-  (token 'UNQUOTE _mode))
+(define-macro-cases token-UNQUOTE!
+  [(token-UNQUOTE!)        #'(token-UNQUOTE! '||)]
+  [(token-UNQUOTE! LEXEME) #'(begin (pop-mode!)
+                                    (token 'UNQUOTE LEXEME))])
 
 (define (token-STRING count char)
   (token 'STRING (make-string count char)))
