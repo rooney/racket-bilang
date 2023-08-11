@@ -9,12 +9,13 @@
   (alnums? (:* (:/ #\a #\z #\A #\Z #\0 #\9)))
   (alnums  (:+ (:/ #\a #\z #\A #\Z #\0 #\9)))
   (op      (:+ (char-set "+/-><=*\\~?!&|^#%$@_")))
-  (identifier (:seq alpha alnums? (:* (:seq op alnums)) prime?))
-  (shortid    (:seq alpha alnums?                       prime?))
-  (operator   (:seq                         op          prime?))
+  (identifier (:seq alpha alnums? (:* (:seq #\- alnums)) prime?))
+  (shortid    (:seq alpha alnums?                        prime?))
+  (operator   (:seq                         op           prime?))
   (newline-char (char-set "\r\n"))
   (newline (:seq (:? spacetabs) (:or "\r\n" "\n")))
   (nextloc (:seq (:+ newline) (:* #\tab)))
+  (slash   #\/)
   (s-quote #\')
   (d-quote #\")
   (b-quote #\`)
@@ -33,13 +34,13 @@
                 [(= dent _level) (token-NEWLINE)]
                 [(< dent _level) (reset-level! dent)]))]
    [spacetabs  (token 'SPACE lexeme)]
+   [slash      (token 'SLASH (string->symbol lexeme))]
    [operator   (token 'OP (string->symbol lexeme))]
    [identifier (token 'ID (string->symbol lexeme))]
-   [integer    (begin (push-mode! shortid-lexer) (token 'INTEGER (string->number lexeme)))]
-   [decimal    (begin (push-mode! shortid-lexer) (token 'DECIMAL (string->number lexeme)))]
-   [".." (token 'DOTDOT ''DOTDOT)]
-   [",," (error (string-append "Unexpected " lexeme))]
-   [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'HOLE ''HOLE))]
+   [(:seq (:? #\-) integer) (begin (push-mode! shortid-lexer) (token 'INT (string->number lexeme)))]
+   [(:seq (:? #\-) decimal) (begin (push-mode! shortid-lexer) (token 'DEC (string->number lexeme)))]
+   [".." (token 'DOTS '..)]
+   [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'HOLE '|,|))]
    [(:seq s-quote nextloc) s-block]
    [(:seq d-quote nextloc) d-block]
    [(:seq b-quote nextloc) b-block]
@@ -50,14 +51,14 @@
    [#\) (token-RPAREN!)]
    [#\{ (token-LBRACE!)]
    [#\} (token-RBRACE!)]
-   [#\[ (token-LBRACK!)]
-   [#\] (token-RBRACK!)]
-   [#\. (token 'DOT ''DOT)]
-   [#\: (token 'COLON ''COLON)]
+   [#\[ (token-LSQUARE!)]
+   [#\] (token-RSQUARE!)]
+   [#\. (token 'DOT '|.|)]
+   [#\: (token 'COLON ':)]
    [#\; (token 'SEMICOLON ''SEMICOLON)]
    [#\, (if (equal? 'INDENT (token-struct-type (srcloc-token-token _last-token)))
-            (token 'HOLE ''HOLE)
-            (token 'COMMA ''COMMA))]
+            (token 'HOLE '|,|)
+            (token 'COMMA '|,|))]
    [(eof) (if (> _level 0)
               (reset-level! 0) 
               (void))]))
@@ -257,11 +258,11 @@
 (define-macro (token-RPAREN!)
   #'(close-group! (token 'RPAREN ")")))
 
-(define-macro (token-LBRACK!)
-  #'(open-group! (token 'LBRACK "[")))
+(define-macro (token-LSQUARE!)
+  #'(open-group! (token 'LSQUARE "[")))
 
-(define-macro (token-RBRACK!)
-  #'(close-group! (token 'RBRACK "]")))
+(define-macro (token-RSQUARE!)
+  #'(close-group! (token 'RSQUARE "]")))
 
 (define (token-LBRACE! [lexer main-lexer])
   (push-mode! lexer)
