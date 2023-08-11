@@ -4,16 +4,13 @@ expres : /feeds? expr4
 @expr4 : expr3 /(SPACE|feeds)?
 @expr3 : apply3|macro3|break
        | expr2
-@expr2 : apply2|macro2
-       | macroL|macro1
+@expr2 : apply2|macro2|macro1
        | exprL
 @exprL : break1|breakO
        | exprk
 @exprk : comma1|commaO|comma
        | expr1
 @expr1 : apply1
-       | exprQ
-@exprQ : keyv
        | prop
        | exprO
 @exprO : applyO
@@ -31,10 +28,10 @@ macro  : DOTS|@op
 @mL    : (break|breakO|break1)       /SPACE
 @mR    :                             /SPACE (exprk|macro1)
 macro1 :          macro mR
-       |     m1   macro mR?
-macroL :  mL      macro mR?
-macro2 : (mL|m1)? macro mR? indent
-macro3 : (mL|m1)? macro mR? indent? /feeds expr3
+       |  m1      macro mR?
+macro2 :     mL   macro mR?
+       | (m1|mL)? macro mR? indent
+macro3 : (m1|mL)? macro mR? indent? /feeds expr3
 
 comma  : (commaO|comma1|expr1) /SPACE?  /COMMA
 break  : (breakO|break1)       /SPACE?  /COMMA
@@ -48,7 +45,8 @@ breakO : break (op|dot|bracket)+
 
 apply3 : (exprL|apply2) /feeds expr3
 apply2 :  exprL indent
-apply1 :  exprQ /SPACE expr1
+       |  exprO (/SPACE kv+)? /SPACE  kv2
+apply1 :  exprO (/SPACE kv+)? /SPACE (kv|expr1)
 applyO :  exprO (op|dot|bracket)+
 apply0 : (expr0|op) e
 @e     : id
@@ -63,7 +61,8 @@ id     : ID
 @keyf  : @op|ID|INT|DEC|DOTS
 @idx   : opid   (DOT opid)* op? | braces
 key    : keyf+ (/DOT keyf+)*    | braces | @key? DOTS+ DOT
-keyv   : @key /COLON exprO?
+kv     : @key /COLON exprO
+kv2    : @key /COLON /SPACE expr2
 atom   :      /COLON @key?
 param  : /LPAREN /COLON ((DOT|SLASH)? @idx)? /RPAREN
 prop   :                 (DOT|SLASH)  @idx /COLON exprO?
