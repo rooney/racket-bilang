@@ -52,13 +52,14 @@ apply2 :  exprL kwargs? (/SPACE kv2|indent)
 apply1 :  exprO kwargs? /SPACE (kv|expr1)
 applyO :  exprO (op|dot|bracket)+
 apply0 : (expr0|op) e
+       |  exprO string
 @e     : id
        | int|dec
        | string
 
 int    : INT
 dec    : DEC
-op     : OP|SLASH
+op     : OP|SLASH|THROW|CATCH
 dot    : (DOT|SLASH) key
 @key   : @id (/DOT @id)* @op? | braces
 id     : ID | /LPAREN @op /RPAREN

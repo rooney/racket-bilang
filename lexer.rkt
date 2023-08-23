@@ -44,6 +44,8 @@
    [(:seq b-quote nextloc) b-block]
    [d-quote d-str]
    [b-quote b-str]
+   ["()" (token 'THROW ''THROW)]
+   ["{}" (token 'CATCH ''CATCH)]
    [#\( (token-LPAREN!)]
    [#\) (token-RPAREN!)]
    [#\{ (token-LBRACE!)]
