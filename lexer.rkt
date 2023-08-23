@@ -41,10 +41,8 @@
    [(:seq (:? #\-) decimal) (begin (push-mode! shortid-lexer) (token 'DEC (string->number lexeme)))]
    [".." (token 'DOTS '..)]
    [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'HOLE '|,|))]
-   [(:seq s-quote nextloc) s-block]
    [(:seq d-quote nextloc) d-block]
    [(:seq b-quote nextloc) b-block]
-   [s-quote s-str]
    [d-quote d-str]
    [b-quote b-str]
    [#\( (token-LPAREN!)]
@@ -94,26 +92,16 @@
         [(< new-dent next-dent) NODENT]
         [(> new-dent next-dent) (error-on-indentation next-dent)])))
 
-(define-macro s-str
-  #'(token-QUOTE! (str-lexer ()
-                             [nextloc (rewind! (token-UNQUOTE!))]
-                             [(eof) (cons (token-UNQUOTE!)
-                                          (reset-level! 0))])))
-
 (define-macro d-str
   #'(token-QUOTE! (str-lexi (d-quote)
                             [d-quote (token-UNQUOTE! lexeme)]
                             [newline-char (error-unterminated-string)]
-                            [(:seq #\` nextloc) (str-interp #:dent-or (error-unterminated-string))]
                             [(eof) (error-unterminated-string)])))
 
 (define-macro b-str
-  #'(token-QUOTE! (str-lexi (#\( #\) #\{ #\} #\[ #\] #\, #\space #\tab)
-                            [(:or #\) #\} #\] newline-char) (rewind! (token-UNQUOTE!))]
-                            [(:seq spacetabs? #\,) (rewind! (token-UNQUOTE!))]
-                            [#\( (check-if-balanced find-endparen)]
-                            [#\{ (check-if-balanced find-endbrace)]
-                            [#\[ (check-if-balanced find-endbracket)]
+  #'(token-QUOTE! (str-lexi (#\,)
+                            [newline-char (rewind! (token-UNQUOTE!))]
+                            [#\, (rewind! (token-UNQUOTE!))]
                             [(eof) (cons (token-UNQUOTE!)
                                          (reset-level! 0))])))
 
@@ -126,11 +114,6 @@
   #'(blockstr str-lexi
               [(:seq #\` nextloc) (str-interp #:dent-or (rewind! #:until "`"))]
               CUSTOM-RULES ...))
-
-(define-macro s-block
-  #'(append (list (token-QUOTE! dedent->unquote)
-                  (indent! (blockstr str-lexer [(eof) (reset-level! 0)])))
-            (-1LF (extract-whites!))))
 
 (define-macro d-block
   #'(append (list (token-QUOTE! (lexer-srcloc [d-quote (token-UNQUOTE!)]
@@ -309,27 +292,6 @@
         [(< new-dent current-dent) (error-on-indentation)]
         [(= new-dent current-dent) (token 'STRING "")]
         [(> new-dent current-dent) (error-on-indentation current-dent)])))
-
-(define find-endparen (look-for #\)))
-(define find-endbrace (look-for #\}))
-(define find-endbracket (look-for #\]))
-
-(define-macro (look-for TERMINATOR)
-  #'(str-lexi (#\( #\) #\{ #\} #\[ #\])
-              [#\( (check-if-balanced find-endparen)]
-              [#\{ (check-if-balanced find-endbrace)]
-              [#\[ (check-if-balanced find-endbracket)]
-              [TERMINATOR (ok-balanced)]
-              [(:or #\) #\} #\]) (error "parenthesis/brace/bracket mismatch")]
-              [(eof) (error "Missing closing parenthesis/brace/bracket")]))
-
-(define-macro (check-if-balanced LEXER)
-  #'(begin (push-mode! LEXER)
-           (token 'STRING lexeme)))
-
-(define-macro (ok-balanced)
-  #'(begin (pop-mode!)
-           (token 'STRING lexeme)))
 
 (define (bilang-lexer ip)
   (set! _last-token
