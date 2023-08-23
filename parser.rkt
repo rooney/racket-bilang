@@ -1,7 +1,10 @@
 #lang brag
 
-expres : /feeds? expr4
-@expr4 : expr3 /(SPACE|feeds)?
+expres : /feeds? expr5
+@expr5 : expr3 /feeds? /SPACE?
+       | expr4
+@expr4 : apply4
+       | props
 @expr3 : apply3|macro3|break
        | expr2
 @expr2 : apply2|macro2|macro1
@@ -11,7 +14,6 @@ expres : /feeds? expr4
 @exprk : comma1|commaO|comma
        | expr1
 @expr1 : apply1
-       | prop
        | exprO
 @exprO : applyO
        | dot
@@ -23,15 +25,16 @@ expres : /feeds? expr4
 @expr0 : apply0
        | e
 
-macro  : DOTS|@op
-@m1    : (comma|commaO|comma1|expr1) /SPACE
-@mL    : (break|breakO|break1)       /SPACE
-@mR    :                             /SPACE (exprk|macro1)
-macro1 :          macro mR
-       |  m1      macro mR?
-macro2 :     mL   macro mR?
-       | (m1|mL)? macro mR? indent
-macro3 : (m1|mL)? macro mR? indent? /feeds expr3
+props  : prop (/SPACE prop)*
+
+@mL    : (exprL|break) /SPACE
+@mR    :               /SPACE exprk
+macro  : @op|DOTS
+macro1 :     macro kwargs
+       | mL  macro kwargs?
+       | mL? macro kwargs? mR
+macro2 : mL? macro kwargs? mR? indent
+macro3 : mL? macro kwargs? mR? indent? /feeds expr3
 
 comma  : (commaO|comma1|expr1) /SPACE?  /COMMA
 break  : (breakO|break1)       /SPACE?  /COMMA
@@ -43,10 +46,10 @@ break1 : (break|breakO) /SPACE expr1
 commaO : comma (op|dot|bracket)+
 breakO : break (op|dot|bracket)+
 
+apply4 : (exprL|apply2) /feeds props
 apply3 : (exprL|apply2) /feeds expr3
-apply2 :  exprL indent
-       |  exprO (/SPACE kv+)? /SPACE  kv2
-apply1 :  exprO (/SPACE kv+)? /SPACE (kv|expr1)
+apply2 :  exprL kwargs? (/SPACE kv2|indent)
+apply1 :  exprO kwargs? /SPACE (kv|expr1)
 applyO :  exprO (op|dot|bracket)+
 apply0 : (expr0|op) e
 @e     : id
@@ -56,18 +59,15 @@ apply0 : (expr0|op) e
 int    : INT
 dec    : DEC
 op     : OP|SLASH
-id     : ID
-@opid  : @op|ID
-@keyf  : @op|ID|INT|DEC|DOTS
-@idx   : opid   (DOT opid)* op? | braces
-key    : keyf+ (/DOT keyf+)*    | braces | @key? DOTS+ DOT
-kv     : @key /COLON exprO
-kv2    : @key /COLON /SPACE expr2
-atom   :      /COLON @key?
-param  : /LPAREN /COLON ((DOT|SLASH)? @idx)? /RPAREN
-prop   :                 (DOT|SLASH)  @idx /COLON exprO?
-dot    :                 (DOT|SLASH) (@idx|bracket)
-       |                  DOT int
+dot    : (DOT|SLASH) key
+@key   : @id (/DOT @id)* @op? | braces
+id     : ID | /LPAREN @op /RPAREN
+kv     : key /COLON exprO
+kv1    : key /COLON /SPACE (expr1|macro1)
+kv2    : key /COLON /SPACE macro2
+prop   : @dot /COLON exprO
+atom   :         /COLON key?
+param  : /LPAREN /COLON key? /RPAREN
 hole   : /HOLE
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
@@ -79,7 +79,8 @@ square   : /LSQUARE csv    /RSQUARE
 @bracket : square|parens|braces
 @subexpr : op
          | @indent /feeds
-         | /SPACE? expr4? /SPACE?
+         | /SPACE? expr5?
+kwargs   : (/SPACE kv)+
 @csv     :                /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
          | /INDENT (/hole /SPACE)? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
 indent   : /INDENT expres    /DEDENT
