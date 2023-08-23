@@ -39,7 +39,6 @@
    [identifier (token 'ID (string->symbol lexeme))]
    [(:seq (:? #\-) integer) (begin (push-mode! shortid-lexer) (token 'INT (string->number lexeme)))]
    [(:seq (:? #\-) decimal) (begin (push-mode! shortid-lexer) (token 'DEC (string->number lexeme)))]
-   [".." (token 'DOTS '..)]
    [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'HOLE '|,|))]
    [(:seq d-quote nextloc) d-block]
    [(:seq b-quote nextloc) b-block]

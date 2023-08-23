@@ -29,7 +29,7 @@ props  : prop (/SPACE prop)*
 
 @mL    : (exprL|break) /SPACE
 @mR    :               /SPACE exprk
-macro  : @op|DOTS
+macro  : @op | DOT DOT
 macro1 :     macro kwargs
        | mL  macro kwargs?
        | mL? macro kwargs? mR
