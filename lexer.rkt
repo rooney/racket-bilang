@@ -5,13 +5,12 @@
   (digits (:+ (:/ #\0 #\9)))
   (integer (:seq digits (:* (:seq #\_ digits))))
   (decimal (:seq integer #\. integer))
-  (alpha       (:/ #\a #\z #\A #\Z))
-  (alnums? (:* (:/ #\a #\z #\A #\Z #\0 #\9)))
-  (alnums  (:+ (:/ #\a #\z #\A #\Z #\0 #\9)))
-  (op      (:+ (char-set "+/-><=*\\~?!&|^#%$@_")))
+  (alpha          (:/ #\a #\z #\A #\Z))
+  (alnums     (:+ (:/ #\a #\z #\A #\Z #\0 #\9)))
+  (alnums?    (:? alnums))
   (identifier (:seq alpha alnums? (:* (:seq #\- alnums)) prime?))
   (shortid    (:seq alpha alnums?                        prime?))
-  (operator   (:seq                         op           prime?))
+  (operator   (:seq (:+ (char-set "+/-><=*\\~?!&|^#%$@_")) prime?))
   (newline-char (char-set "\r\n"))
   (newline (:seq (:? spacetabs) (:or "\r\n" "\n")))
   (nextloc (:seq (:+ newline) (:* #\tab)))
@@ -19,10 +18,9 @@
   (s-quote #\')
   (d-quote #\")
   (b-quote #\`)
-  (prime? (:* s-quote))
-  (space/tab (:or #\space #\tab))
-  (spacetabs (:+ space/tab))
-  (spacetabs? (:* space/tab)))
+  (prime?     (:* s-quote))
+  (spacetabs  (:+ (:or #\space #\tab)))
+  (spacetabs? (:? spacetabs)))
 
 (define main-lexer
   (lexer-srcloc
@@ -37,9 +35,9 @@
    [slash      (token 'SLASH (string->symbol lexeme))]
    [operator   (token 'OP (string->symbol lexeme))]
    [identifier (token 'ID (string->symbol lexeme))]
-   [(:seq (:? #\-) integer) (begin (push-mode! shortid-lexer) (token 'INT (string->number lexeme)))]
-   [(:seq (:? #\-) decimal) (begin (push-mode! shortid-lexer) (token 'DEC (string->number lexeme)))]
-   [(:seq "{" spacetabs? ",") (list (token-LBRACE!) (token 'HOLE '|,|))]
+   [integer (begin (push-mode! shortid-lexer) (token 'INT (string->number lexeme)))]
+   [decimal (begin (push-mode! shortid-lexer) (token 'DEC (string->number lexeme)))]
+   [(:seq #\{ spacetabs? #\,) (list (token-LBRACE!) (token 'HOLE '|,|))]
    [(:seq d-quote nextloc) d-block]
    [(:seq b-quote nextloc) b-block]
    [d-quote d-str]
@@ -237,24 +235,24 @@
           TOKEN)))
 
 (define-macro (token-LPAREN!)
-  #'(open-group! (token 'LPAREN "(")))
+  #'(open-group! (token 'LPAREN '|(|)))
 
 (define-macro (token-RPAREN!)
-  #'(close-group! (token 'RPAREN ")")))
+  #'(close-group! (token 'RPAREN '|)|)))
 
 (define-macro (token-LSQUARE!)
-  #'(open-group! (token 'LSQUARE "[")))
+  #'(open-group! (token 'LSQUARE '|[|)))
 
 (define-macro (token-RSQUARE!)
-  #'(close-group! (token 'RSQUARE "]")))
+  #'(close-group! (token 'RSQUARE '|]|)))
 
 (define (token-LBRACE! [lexer main-lexer])
   (push-mode! lexer)
-  (open-group! (token 'LBRACE "{")))
+  (open-group! (token 'LBRACE '|{|)))
 
 (define-macro token-RBRACE!
   #'(cond [(empty? _modestack) (error "No matching pair")]
-          [else (pop-mode!) (close-group! (token 'RBRACE "}"))]))
+          [else (pop-mode!) (close-group! (token 'RBRACE '|}|))]))
 
 (define-macro (token-QUOTE! LEXER)
   #'(begin (push-mode! LEXER)
