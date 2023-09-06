@@ -13,11 +13,9 @@ expres : /feeds? expr4
 @expr1 : apply1
        | exprO
 @exprO : applyO
-       | dot
-       | atom
-       | param
-       | bracket
-       | hole
+       | atom|param
+       | hole|bracket
+       | prop|prot|dot
        | expr0
 @expr0 : apply0
        | e
@@ -54,15 +52,16 @@ apply0 : (expr0|op) e
 
 int    : INT
 dec    : DEC
-op     : OP|SLASH|THROW|CATCH|DOT DOT
+op     : OP|DASH|SLASH|THROW|CATCH|DOT DOT
 id     : ID|/LPAREN @op /RPAREN
 @key   : @id @dot* @op?
 kv     : key /COLON exprO
 kv1    : key /COLON /SPACE (expr1|macro1)
 kv2    : key /COLON /SPACE (expr2|macro2)
-param  : (key /COLON)? /LPAREN /COLON COLON? (@op|key)? /RPAREN
-atom   :                       /COLON COLON? (@op|ID)?
-prop   : (@dot)+ /COLON
+param  : (key /COLON)? /LPAREN /COLON COLON? (@op|DASH? key?) /RPAREN
+atom   :                       /COLON COLON? (@op|DASH? ID?)
+prop   : /DOT (DASH ID (DOT key)?|key) /COLON
+prot   : /DOT DASH @id
 dot    : (DOT|SLASH) @id
 hole   : /HOLE
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE

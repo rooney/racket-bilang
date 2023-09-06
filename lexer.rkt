@@ -8,17 +8,15 @@
   (alpha          (:/ #\a #\z #\A #\Z))
   (alnums     (:+ (:/ #\a #\z #\A #\Z #\0 #\9)))
   (alnums?    (:? alnums))
-  (identifier (:seq alpha alnums? (:* (:seq #\- alnums)) prime?))
-  (shortid    (:seq alpha alnums?                        prime?))
+  (identifier (:seq alpha alnums? (:* (:seq (:+ #\-) alnums)) prime?))
+  (shortid    (:seq alpha alnums?                          prime?))
   (operator   (:seq (:+ (char-set "+/-><=*\\~?!&|^#%$@_")) prime?))
+  (nextloc    (:seq (:+ newline) (:* #\tab)))
+  (newline    (:seq (:? spacetabs) (:or "\r\n" "\n")))
   (newline-char (char-set "\r\n"))
-  (newline (:seq (:? spacetabs) (:or "\r\n" "\n")))
-  (nextloc (:seq (:+ newline) (:* #\tab)))
-  (slash   #\/)
-  (s-quote #\')
-  (d-quote #\")
-  (b-quote #\`)
-  (prime?     (:* s-quote))
+  (d-quote        #\")
+  (b-quote        #\`)
+  (prime?     (:* #\'))
   (spacetabs  (:+ (:or #\space #\tab)))
   (spacetabs? (:? spacetabs)))
 
@@ -31,31 +29,32 @@
                 [(= dent next-level) (indent!)]
                 [(= dent _level) (token-NEWLINE)]
                 [(< dent _level) (reset-level! dent)]))]
-   [spacetabs  (token 'SPACE lexeme)]
-   [slash      (token 'SLASH (string->symbol lexeme))]
-   [operator   (token 'OP (string->symbol lexeme))]
-   [identifier (token 'ID (string->symbol lexeme))]
+   [    #\/    (token 'SLASH '/)]
+   [(:+ #\-)   (token 'DASH                               (string->symbol lexeme))]
+   [spacetabs  (token 'SPACE                                              lexeme )]
+   [operator   (token 'OP                                 (string->symbol lexeme))]
+   [identifier (token 'ID                                 (string->symbol lexeme))]
    [integer (begin (push-mode! shortid-lexer) (token 'INT (string->number lexeme)))]
    [decimal (begin (push-mode! shortid-lexer) (token 'DEC (string->number lexeme)))]
    [(:seq #\{ spacetabs? #\,) (list (token-LBRACE!) (token 'HOLE '|,|))]
    [(:seq d-quote nextloc) d-block]
    [(:seq b-quote nextloc) b-block]
-   [d-quote d-str]
-   [b-quote b-str]
-   ["()" (token 'THROW ''THROW)]
-   ["{}" (token 'CATCH ''CATCH)]
-   [#\( (token-LPAREN!)]
-   [#\) (token-RPAREN!)]
-   [#\{ (token-LBRACE!)]
-   [#\} (token-RBRACE!)]
-   [#\[ (token-LSQUARE!)]
-   [#\] (token-RSQUARE!)]
-   [#\. (token 'DOT '|.|)]
-   [#\: (token 'COLON ':)]
-   [#\; (token 'SEMICOLON ''SEMICOLON)]
-   [#\, (if (equal? 'INDENT (token-struct-type (srcloc-token-token _last-token)))
-            (token 'HOLE '|,|)
-            (token 'COMMA '|,|))]
+   [      d-quote          d-str]
+   [      b-quote          b-str]
+   ["()"  (token 'THROW '())]
+   ["{}"  (token 'CATCH '{})]
+   [#\(   (token-LPAREN!)]
+   [#\)   (token-RPAREN!)]
+   [#\{   (token-LBRACE!)]
+   [#\}   (token-RBRACE!)]
+   [#\[   (token-LSQUARE!)]
+   [#\]   (token-RSQUARE!)]
+   [#\.   (token 'DOT '|.|)]
+   [#\:   (token 'COLON ':)]
+   [#\;   (token 'SEMICOLON ''SEMICOLON)]
+   [#\,   (if (equal? 'INDENT (token-struct-type (srcloc-token-token _last-token)))
+              (token 'HOLE '|,|)
+              (token 'COMMA '|,|))]
    [(eof) (if (> _level 0)
               (reset-level! 0) 
               (void))]))
