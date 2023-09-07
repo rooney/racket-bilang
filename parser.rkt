@@ -15,7 +15,7 @@ expres : /feeds? expr4
 @exprO : applyO
        | atom|param
        | hole|bracket
-       | prop|prot|dot
+       | prot|dot
        | expr0
 @expr0 : apply0
        | e
@@ -56,13 +56,14 @@ op     : OP|DASH|SLASH|THROW|CATCH|DOT DOT
 id     : ID|/LPAREN @op /RPAREN
 @key   : @id @dot* @op?
 kv     : key /COLON exprO
-kv1    : key /COLON /SPACE (expr1|macro1)
-kv2    : key /COLON /SPACE (expr2|macro2)
+kv2    : key /COLON /SPACE expr2
 param  : (key /COLON)? /LPAREN /COLON COLON? (@op|DASH? key?) /RPAREN
-atom   :                       /COLON COLON? (@op|DASH? ID?)
-prop   : /DOT (DASH ID (DOT key)?|key) /COLON
-prot   : /DOT DASH @id
+atom   :                       /COLON COLON? (@op|DASH? ID?) e?
 dot    : (DOT|SLASH) @id
+prot   : /DOT DASH @id
+prop   : /DOT (DASH ID (DOT key)?|key) /COLON
+prop0  : @prop exprO
+prop2  : @prop /SPACE expr2
 hole   : /HOLE
 string : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
