@@ -16,18 +16,17 @@ expres : /feeds? expr4
        | atom
        | expr0
 @expr0 : apply0
-       | bubble
        | bracket
        | dot
        | prop
        | slash
-       | it
        | self
+       | it
        | e
 
 @mL    : (exprL|break) /SPACE
 @mR    :               /SPACE exprk
-macro  : @opx|def|DOT COLON
+macro  : op|bubble|def COLON|DOT COLON|LPAREN RPAREN|LBRACE RBRACE
 macro1 :     @macro kwargs
        | mL  @macro kwargs?
        | mL? @macro kwargs? mR
@@ -52,7 +51,7 @@ apply1 :  exprO         kwargs? /SPACE (kv|expr1)
 applyO :  atom   bracket+
 apply0 :  expr0 (bracket|dot|slash|op)+
        |  exprO string
-       |  opx e
+       |  op e
        | (int|dec) id
 @e     :  int|dec|id
        |  string
@@ -63,14 +62,13 @@ int    : INT
 dec    : DEC
 id     : (DOLLAR|DASH)? ID
 op     : OP|DOLLAR|DASH|SLASH
-opx    : @op|THROW|CATCH
-prop   : def exprO
 key    :              @op|@id
 atom   :      /COLON (@op|ID|COLON)?
 bubble : (key /COLON)? /LPAREN /COLON @key dot* op? /RPAREN
+prop   : @def /COLON exprO
 kv     : @key /COLON exprO
 kv2    : @key /COLON (/SPACE expr2|@indent)
-@def   : (@self|@self? @dot+) @op? /COLON
+def    : (@self|@self? @dot+) @op?
 dot    : /DOT @key
 self   : /DOT /SLASH DOLLAR? ID
 slash  : /SLASH ID
@@ -81,14 +79,15 @@ it     : /IT
 string : strix | str
 interp : INTERPOLATE (braces|indent)
 
-@bracket : square|parens|braces
-parens   : /LPAREN subexpr /RPAREN
-braces   : /LBRACE subexpr /RBRACE
-square   : /LSQUARE csv    /RSQUARE
+braces   :         /LBRACE subexpr  /RBRACE
+concur   : /LPAREN /LBRACE subexpr? /RBRACE /RPAREN
+parens   : /LPAREN         subexpr          /RPAREN
+square   : /LSQUARE        array?           /RSQUARE
+@bracket : square|braces|parens|concur
 @subexpr : @indent /feeds
-         | /SPACE? expr4?
+         | /SPACE? expr4
 kwargs   : (/SPACE kv)+
-@csv     :              /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
+@array    :              /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
          | /INDENT (/IT /SPACE)? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
 indent   : /INDENT expres    /DEDENT
 pseudent : /INDENT pseudent? /DEDENT

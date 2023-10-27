@@ -49,8 +49,6 @@
    [(:seq b-quote indent) b-block]
    [      d-quote         d-str]
    [      b-quote         b-str]
-   ["()"       (token 'THROW '())]
-   ["{}"       (token 'CATCH '{})]
    ["{," (list (token-LBRACE!) (token 'IT '|,|))]
    [#\(        (token-LPAREN!)]
    [#\)        (token-RPAREN!)]
