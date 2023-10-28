@@ -34,10 +34,10 @@ macro2 : mL? @macro kwargs? mR? indent
 macro3 : mL? @macro kwargs? mR? indent? /feeds expr3
 macroB :     @macro kwargs? mR? indent
 
-comma  : (commaO|comma1|expr1) /SPACE?  /COMMA
-break  : (breakO|break1)       /SPACE?  /COMMA
-       |                expr2  /NEWLINE /COMMA
-break2 : (apply2|macro2)       /NEWLINE /COMMA
+comma  : (commaO|comma1|apply1) /SPACE?  /COMMA
+break  : (breakO|break1)        /SPACE?  /COMMA
+       |                expr2   /NEWLINE /COMMA
+break2 : (apply2|macro2)        /NEWLINE /COMMA
 
 break1 : (break|breakO) /SPACE expr1
 comma1 : (comma|commaO) /SPACE expr1
