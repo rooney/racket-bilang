@@ -81,17 +81,13 @@ interp : INTERPOLATE (braces|indent)
 
 braces   :         /LBRACE subexpr  /RBRACE
 concur   : /LPAREN /LBRACE subexpr? /RBRACE /RPAREN
-parens   : /LPAREN         subexp1          /RPAREN
+parens   : /LPAREN         subexpr          /RPAREN
 square   : /LSQUARE        array?           /RSQUARE
 @bracket : square|braces|parens|concur
-@subexpr : @indent /feeds | /SPACE? expr4
-@subexp1 : @indent /feeds | /SPACE? (apply3|macro3
-                                    |apply2|macro2|macro1
-                                    |break1|breakO|break
-                                    |comma1|commaO|comma
-                                    |apply1) /feeds? /SPACE?
+@subexpr : @indent /feeds
+         | /SPACE? expr4
 kwargs   : (/SPACE kv)+
-@array   :              /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
+@array    :              /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
          | /INDENT (/IT /SPACE)? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
 indent   : /INDENT expres    /DEDENT
 pseudent : /INDENT pseudent? /DEDENT
