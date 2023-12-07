@@ -62,27 +62,27 @@ apply0 :  expr0 (bracket|dot|slash|op)+
        |  string
        |  quant
 
-quant  : (INT|DEC) ID
-int    : INT
-dec    : DEC
-id     : (DOLLAR|DASH)? ID
-op     : OP|DOLLAR|DASH|SLASH
+quant  : (INTEGER|DECIMAL) IDENTIFIER
+int    : INTEGER
+dec    : DECIMAL
+id     : (DOLLAR|DASH)? IDENTIFIER
+op     : OPERATOR|DOLLAR|DASH|SLASH
 bublet : BUBLET
 key    :              @op|@id
-atom   :      /COLON (@op|ID|COLON)?
+atom   :      /COLON (@op|IDENTIFIER|COLON)?
 prop   : @def /COLON exprO
 kv     : @key /COLON exprO
 kv2    : @key /COLON (/SPACE expr2|@indent)
 def    : (@self|@self? @dot+) @op?
 dot    : /DOT @key
-self   : /DOT /SLASH DOLLAR? ID
-slash  : /SLASH ID
+self   : /DOT /SLASH DOLLAR? IDENTIFIER
+slash  : /SLASH IDENTIFIER
 it     : /IT
 @str   : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
 @strix : /BACKTICK str
 string : strix | str
-interp : INTERPOLATE (braces|indent)
+interp : INTEGERERPOLATE (braces|indent)
 
 braces   :         /LBRACE subexpr  /RBRACE
 concur   : /LPAREN /LBRACE subexpr? /RBRACE /RPAREN
