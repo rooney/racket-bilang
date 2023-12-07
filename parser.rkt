@@ -26,7 +26,12 @@ expres : /feeds? expr4
 
 @mL    : (exprL|break) /SPACE
 @mR    :               /SPACE exprk
-macro  : op|bubble|def COLON|DOT COLON|LPAREN RPAREN|LBRACE RBRACE
+macro  : LPAREN RPAREN
+       | LBRACE RBRACE
+       | DOT COLON
+       | def COLON
+       | bublet
+       | op
 macro1 :     @macro kwargs
        | mL  @macro kwargs?
        | mL? @macro kwargs? mR
@@ -62,9 +67,9 @@ int    : INT
 dec    : DEC
 id     : (DOLLAR|DASH)? ID
 op     : OP|DOLLAR|DASH|SLASH
+bublet : BUBLET
 key    :              @op|@id
 atom   :      /COLON (@op|ID|COLON)?
-bubble : (key /COLON)? /LPAREN /COLON @key dot* op? /RPAREN
 prop   : @def /COLON exprO
 kv     : @key /COLON exprO
 kv2    : @key /COLON (/SPACE expr2|@indent)
@@ -87,7 +92,7 @@ square   : /LSQUARE        array?           /RSQUARE
 @subexpr : @indent /feeds
          | /SPACE? expr4
 kwargs   : (/SPACE kv)+
-@array    :              /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
+@array    :             /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
          | /INDENT (/IT /SPACE)? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
 indent   : /INDENT expres    /DEDENT
 pseudent : /INDENT pseudent? /DEDENT

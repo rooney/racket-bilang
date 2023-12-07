@@ -17,6 +17,7 @@
   (unit       (:seq (:+ alpha)                                  prime?))
   (operator   (:seq (:+ opchar)                                 prime?))
   (indent     (:seq (:+ newline) (:* #\tab)))
+  (bublet     (:seq "(:" (:? (:or identifier operator #\:)) #\)))
   (dashes     (:+ #\-))
   (prime?     (:* #\'))
   (d-quote        #\")
@@ -43,6 +44,7 @@
    [dashes     (token 'DASH                               (string->symbol lexeme))]
    [operator   (token 'OP                                 (string->symbol lexeme))]
    [identifier (token 'ID                                 (string->symbol lexeme))]
+   [bublet     (token 'BUBLET                             (string->symbol lexeme))]
    [integer    (token 'INT (begin (push-mode! unit-lexer) (string->number lexeme)))]
    [decimal    (token 'DEC (begin (push-mode! unit-lexer) (string->number lexeme)))]
    [(:seq d-quote indent) d-block]
