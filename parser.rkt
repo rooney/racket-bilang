@@ -4,7 +4,7 @@ expres : /feeds? expr4
 @expr4 : expr3 /feeds? /SPACE?
 @expr3 : apply3|macro3
        | expr2
-@expr2 : apply2|macro2|macro1
+@expr2 : apply2|macro2|macro1|comma2
        | exprL
 @exprL : break1|breakO|break
        | exprk
@@ -43,16 +43,17 @@ comma  : (commaO|comma1|apply1) /SPACE?  /COMMA
 break  : (breakO|break1)        /SPACE?  /COMMA
        |                expr2   /NEWLINE /COMMA
 break2 : (apply2|macro2)        /NEWLINE /COMMA
-
-break1 : (break|breakO) /SPACE expr1
-comma1 : (comma|commaO) /SPACE expr1
+break1 : (break|breakO) kwargs? /SPACE (kv|expr1)
+comma1 : (comma|commaO) kwargs? /SPACE (kv|expr1)
+comma2 : (comma|commaO) kwargs? /SPACE (kv2|apply2)
 
 breakO : break (bracket|dot|slash|op)+
 commaO : comma (bracket|dot|slash|op)+
 
-apply3 : (exprL|apply2) /feeds expr3
-apply2 : (exprL|break2) kwargs? (/SPACE kv2|indent)
-apply1 :  exprO         kwargs? /SPACE (kv|expr1)
+apply3 : (exprL|apply2|comma2) /feeds expr3
+apply2 :  exprO /SPACE apply2
+       |  exprO kwargs? (/SPACE kv2|indent)
+apply1 :  exprO kwargs? /SPACE (kv|expr1)
 applyO :  atom   bracket+
 apply0 :  expr0 (bracket|dot|slash|op)+
        |  exprO string
@@ -72,7 +73,7 @@ key    :              @op|@id
 atom   :      /COLON (@op|IDENTIFIER|COLON)?
 prop   : @def /COLON exprO
 kv     : @key /COLON exprO
-kv2    : @key /COLON (/SPACE expr2|@indent)
+kv2    : @key /COLON (@indent|/SPACE (exprk|apply2|macro2|macro1|comma2))
 def    : (@self|@self? @dot+) @op?
 dot    : /DOT @key
 self   : /DOT /SLASH DOLLAR? IDENTIFIER
