@@ -2,11 +2,13 @@
 
 expres : /feeds? expr4
 @expr4 : expr3 /feeds? /SPACE?
-@expr3 : apply3|macro3
+@expr3 : apply3
+       | exprB
+@exprB : break2|break1|breakO|break
+       | exprZ
+@exprZ : macroZ
        | expr2
-@expr2 : apply2|macro2|macro1|comma2
-       | exprL
-@exprL : break1|breakO|break
+@expr2 : apply2|comma2
        | exprk
 @exprk : comma1|commaO|comma
        | expr1
@@ -16,43 +18,43 @@ expres : /feeds? expr4
        | atom
        | expr0
 @expr0 : apply0
-       | bracket
        | dot
        | prop
        | slash
+       | bracket
        | self
        | it
        | e
 
-@mL    : (exprL|break) /SPACE
-@mR    :               /SPACE exprk
-macro  : LPAREN RPAREN
+@mL    : (exprk|break1|breakO|break) /SPACE
+@mJ    :                             /SPACE exprk
+@mZ    :                             /SPACE exprZ
+@macro : LPAREN RPAREN
        | LBRACE RBRACE
        | DOT COLON
        | def COLON
        | bublet
        | op
-macro1 :     @macro kwargs
-       | mL  @macro kwargs?
-       | mL? @macro kwargs? mR
-macro2 : mL? @macro kwargs? mR? indent
-macro3 : mL? @macro kwargs? mR? indent? /feeds expr3
-macroB :     @macro kwargs? mR? indent
+macroZ :     macro kwargs
+       | mL  macro kwargs?
+       | mL? macro kwargs? mZ
+       | mL? macro kwargs? mJ indent?
+       | mL? macro kwargs?    indent
 
 comma  : (commaO|comma1|apply1) /SPACE?  /COMMA
 break  : (breakO|break1)        /SPACE?  /COMMA
-       |                expr2   /NEWLINE /COMMA
-break2 : (apply2|macro2)        /NEWLINE /COMMA
-break1 : (break|breakO) kwargs? /SPACE (kv|expr1)
-comma1 : (comma|commaO) kwargs? /SPACE (kv|expr1)
-comma2 : (comma|commaO) kwargs? /SPACE (kv2|apply2)
+       |                exprB   /NEWLINE /COMMA
+break1 : (@break|breakO) kwargs? /SPACE (kv |expr1)
+break2 : (@break|breakO) kwargs? /SPACE (kvZ|apply2)
+comma1 : (@comma|commaO) kwargs? /SPACE (kv |expr1)
+comma2 : (@comma|commaO) kwargs? /SPACE (kvZ|apply2)
 
-breakO : break (bracket|dot|slash|op)+
-commaO : comma (bracket|dot|slash|op)+
+breakO : @break (bracket|dot|slash|op)+
+commaO : @comma (bracket|dot|slash|op)+
 
-apply3 : (exprL|apply2|comma2) /feeds expr3
+apply3 : (expr2|break2|break1|breakO|break|macro|macroZ) /feeds expr3
 apply2 :  exprO /SPACE apply2
-       |  exprO kwargs? (/SPACE kv2|indent)
+       |  exprO kwargs? (/SPACE kvZ|indent)
 apply1 :  exprO kwargs? /SPACE (kv|expr1)
 applyO :  atom   bracket+
 apply0 :  expr0 (bracket|dot|slash|op)+
@@ -73,7 +75,7 @@ key    :              @op|@id
 atom   :      /COLON (@op|IDENTIFIER|COLON)?
 prop   : @def /COLON exprO
 kv     : @key /COLON exprO
-kv2    : @key /COLON (@indent|/SPACE (exprk|apply2|macro2|macro1|comma2))
+kvZ    : @key /COLON (/SPACE exprZ|@indent)
 def    : (@self|@self? @dot+) @op?
 dot    : /DOT @key
 self   : /DOT /SLASH DOLLAR? IDENTIFIER
@@ -83,7 +85,7 @@ it     : /IT
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
 @strix : /BACKTICK str
 string : strix | str
-interp : INTEGERERPOLATE (braces|indent)
+interp : INTERPOLATE (braces|indent)
 
 braces   :         /LBRACE subexpr  /RBRACE
 concur   : /LPAREN /LBRACE subexpr? /RBRACE /RPAREN
@@ -93,8 +95,8 @@ square   : /LSQUARE        array?           /RSQUARE
 @subexpr : @indent /feeds
          | /SPACE? expr4
 kwargs   : (/SPACE kv)+
-@array    :             /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
+@array   :             /SPACE? (expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /SPACE?)?
          | /INDENT (/IT /SPACE)? expr1 (/NEWLINE? /COMMA /SPACE expr1)* /COMMA? /NEWLINE* /DEDENT /NEWLINE
-indent   : /INDENT expres    /DEDENT
+indent   : /INDENT @expres   /DEDENT
 pseudent : /INDENT pseudent? /DEDENT
 feeds    : /(NEWLINE|pseudent)+
