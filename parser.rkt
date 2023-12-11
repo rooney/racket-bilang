@@ -50,7 +50,7 @@ comma2 : (@comma|commaO) kwargs? /SPACE (kv2|apply2)
 breakO : @break (bracket|dot|slash|op)+
 commaO : @comma (bracket|dot|slash|op)+
 
-apply3 : (exprB|macro) /feeds expr3
+apply3 : (exprB|macro) (/SPACE key /COLON)? /feeds expr3
 apply2 :  exprO kwargs? (/SPACE (kv2|apply2)|indent)
 apply1 :  exprO kwargs? /SPACE (kv|expr1)
 applyO :  atom   bracket+
