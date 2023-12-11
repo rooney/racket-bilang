@@ -6,7 +6,7 @@ expres : /feeds? expr4
        | exprB
 @exprB : break2|break1|breakO|break
        | exprZ
-@exprZ : macroZ
+@exprZ : macroX
        | expr2
 @expr2 : apply2|comma2
        | exprk
@@ -26,35 +26,32 @@ expres : /feeds? expr4
        | it
        | e
 
-@mL    : (exprk|break1|breakO|break) /SPACE
-@mJ    :                             /SPACE exprk
-@mZ    :                             /SPACE exprZ
+@mX    : (exprk|break1|breakO|break) /SPACE
 @macro : LPAREN RPAREN
        | LBRACE RBRACE
        | DOT COLON
        | def COLON
        | BUBLET
        | op
-macroZ :     macro kwargs
-       | mL  macro kwargs?
-       | mL? macro kwargs? mZ
-       | mL? macro kwargs? mJ indent?
-       | mL? macro kwargs?    indent
+macroX :     macro kwargs
+       | mX  macro kwargs?
+       | mX? macro kwargs? /SPACE exprZ
+       | mX? macro kwargs? /SPACE exprk indent?
+       | mX? macro kwargs?              indent
 
 comma  : (commaO|comma1|apply1) /SPACE?  /COMMA
 break  : (breakO|break1)        /SPACE?  /COMMA
-       |                exprB   /NEWLINE /COMMA
-break1 : (@break|breakO) kwargs? /SPACE (kv |expr1)
+       |                 exprB  /NEWLINE /COMMA
+break1 : (@break|breakO) kwargs? /SPACE (kv|expr1)
 break2 : (@break|breakO) kwargs? /SPACE (kv2|apply2)
-comma1 : (@comma|commaO) kwargs? /SPACE (kv |expr1)
+comma1 : (@comma|commaO) kwargs? /SPACE (kv|expr1)
 comma2 : (@comma|commaO) kwargs? /SPACE (kv2|apply2)
 
 breakO : @break (bracket|dot|slash|op)+
 commaO : @comma (bracket|dot|slash|op)+
 
-apply3 : (expr2|break2|break1|breakO|break|macro|macroZ) /feeds expr3
-apply2 :  exprO /SPACE apply2
-       |  exprO kwargs? (/SPACE kv2|indent)
+apply3 : (exprB|macro) /feeds expr3
+apply2 :  exprO kwargs? (/SPACE (kv2|apply2)|indent)
 apply1 :  exprO kwargs? /SPACE (kv|expr1)
 applyO :  atom   bracket+
 apply0 :  expr0 (bracket|dot|slash|op)+
