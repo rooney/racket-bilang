@@ -6,9 +6,9 @@ expres : /feeds? expr4
        | exprB
 @exprB : break2|break1|breakO|break
        | expr2
-@expr2 : apply2|applyZ|comma2|macro
-       | exprk
-@exprk : comma1|commaO|comma
+@expr2 : apply2
+       | comma2|comma1|commaO|comma
+       | macro
        | expr1
 @expr1 : apply1
        | exprO
@@ -23,7 +23,9 @@ expres : /feeds? expr4
        | self
        | it
        | e
-@exprL : exprk|break1|breakO|break
+@exprL : expr1
+       | comma1|commaO|comma
+       | break1|breakO|break
 
 @macOP : LPAREN RPAREN
        | LBRACE RBRACE
@@ -33,24 +35,22 @@ expres : /feeds? expr4
        | op
 macro  :                 macOP kwargs
        |  exprL /SPACE   macOP kwargs?
-       | (exprL /SPACE)? macOP kwargs? /SPACE (kv2|expr2)
+       | (exprL /SPACE)? macOP kwargs? /SPACE (expr2|kv2)
        | (exprL /SPACE)? macOP kwargs? indent
 
 comma  : (commaO|comma1|apply1) /SPACE?  /COMMA
 break  : (breakO|break1)        /SPACE?  /COMMA
        |                 exprB  /NEWLINE /COMMA
-break1 : (@break|breakO) kwargs? /SPACE (kv|expr1)
-break2 : (@break|breakO) kwargs? /SPACE (kv2|apply2)
-comma1 : (@comma|commaO) kwargs? /SPACE (kv|expr1)
-comma2 : (@comma|commaO) kwargs? /SPACE (kv2|apply2)
-
-breakO : @break (bracket|dot|slash|op)+
-commaO : @comma (bracket|dot|slash|op)+
+breakO :  @break (bracket|dot|slash|op)+
+commaO :  @comma (bracket|dot|slash|op)+
+comma1 : (@comma|commaO) kwargs? /SPACE (expr1|kv)
+comma2 : (@comma|commaO) kwargs? /SPACE (expr2|kv2)
+break1 : (@break|breakO) kwargs? /SPACE (expr1|kv)
+break2 : (@break|breakO) kwargs? /SPACE (expr2|kv2)
 
 apply3 : (exprB|macOP) (/SPACE key /COLON)? /feeds expr3
-applyZ :  exprL kwargs?                     @indent
-apply2 :  exprO kwargs? /SPACE (kv2|apply2)
-apply1 :  exprO kwargs? /SPACE (kv|expr1)
+apply2 :  exprO kwargs? (/SPACE (expr2|kv2)|@indent)
+apply1 :  exprO kwargs? /SPACE (expr1|kv)
 applyO :  atom   bracket+
 apply0 :  expr0 (bracket|dot|slash|op)+
        |  exprO string
