@@ -5,10 +5,8 @@ expres : /feeds? expr4
 @expr3 : apply3
        | exprB
 @exprB : break2|break1|breakO|break
-       | exprZ
-@exprZ : macroX
        | expr2
-@expr2 : apply2|comma2
+@expr2 : apply2|applyZ|comma2|macro
        | exprk
 @exprk : comma1|commaO|comma
        | expr1
@@ -25,19 +23,18 @@ expres : /feeds? expr4
        | self
        | it
        | e
+@exprL : exprk|break1|breakO|break
 
-@mX    : (exprk|break1|breakO|break) /SPACE
-@macro : LPAREN RPAREN
+@macOP : LPAREN RPAREN
        | LBRACE RBRACE
        | DOT COLON
        | def COLON
        | BUBLET
        | op
-macroX :     macro kwargs
-       | mX  macro kwargs?
-       | mX? macro kwargs? /SPACE exprZ
-       | mX? macro kwargs? /SPACE exprk indent?
-       | mX? macro kwargs?              indent
+macro  :                 macOP kwargs
+       |  exprL /SPACE   macOP kwargs?
+       | (exprL /SPACE)? macOP kwargs? /SPACE (kv2|expr2)
+       | (exprL /SPACE)? macOP kwargs? indent
 
 comma  : (commaO|comma1|apply1) /SPACE?  /COMMA
 break  : (breakO|break1)        /SPACE?  /COMMA
@@ -50,8 +47,9 @@ comma2 : (@comma|commaO) kwargs? /SPACE (kv2|apply2)
 breakO : @break (bracket|dot|slash|op)+
 commaO : @comma (bracket|dot|slash|op)+
 
-apply3 : (exprB|macro) (/SPACE key /COLON)? /feeds expr3
-apply2 :  exprO kwargs? (/SPACE (kv2|apply2)|indent)
+apply3 : (exprB|macOP) (/SPACE key /COLON)? /feeds expr3
+applyZ :  exprL kwargs?                     @indent
+apply2 :  exprO kwargs? /SPACE (kv2|apply2)
 apply1 :  exprO kwargs? /SPACE (kv|expr1)
 applyO :  atom   bracket+
 apply0 :  expr0 (bracket|dot|slash|op)+
@@ -69,9 +67,10 @@ id     : (DOLLAR|DASH)? IDENTIFIER
 op     : OPERATOR|DOLLAR|DASH|SLASH
 key    :              @op|@id
 atom   :      /COLON (@op|IDENTIFIER|COLON)?
-prop   : @def /COLON exprO
-kv     : @key /COLON exprO
-kv2    : @key /COLON (/SPACE exprZ|@indent)
+prop   : @def /COLON        exprO
+kv     : @key /COLON        exprO
+kv2    : @key /COLON /SPACE expr2
+       | @key /COLON @indent
 def    : self op? (/DOT @key op?)*
        |          (/DOT @key op?)+
 dot    :           /DOT @id
