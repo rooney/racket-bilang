@@ -56,8 +56,8 @@
    [#\)        (token-RPAREN!)]
    [#\{        (token-LBRACE!)]
    [#\}        (token-RBRACE!)]
-   [#\[        (token-LSQUARE!)]
-   [#\]        (token-RSQUARE!)]
+   [#\[        (token-LBRACKET!)]
+   [#\]        (token-RBRACKET!)]
    [#\.        (token 'DOT       '|.|)]
    [#\:        (token 'COLON     '|:|)]
    [#\;        (token 'SEMICOLON '|;|)]
@@ -249,11 +249,11 @@
 (define-macro (token-RPAREN!)
   #'(close-group! (token 'RPAREN '|)|)))
 
-(define-macro (token-LSQUARE!)
-  #'(open-group! (token 'LSQUARE '|[|)))
+(define-macro (token-LBRACKET!)
+  #'(open-group! (token 'LBRACKET '|[|)))
 
-(define-macro (token-RSQUARE!)
-  #'(close-group! (token 'RSQUARE '|]|)))
+(define-macro (token-RBRACKET!)
+  #'(close-group! (token 'RBRACKET '|]|)))
 
 (define (token-LBRACE! [lexer main-lexer])
   (push-mode! lexer)
