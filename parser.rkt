@@ -22,7 +22,7 @@ expres : /feeds? expr4
        | e
 @exprl : expr1|comma1|commaO|comma
 @exprL : exprl|break1|breakO|break
-@exprI : exprl|commaI|applyI
+@exprI : exprl|applyI|macroI|commaI
 
 @macro : LPAREN RPAREN
        | LBRACE RBRACE
@@ -30,6 +30,9 @@ expres : /feeds? expr4
        | def COLON
        | BUBLET
        | op
+macroI :                 macro kwargs
+       |  exprl /SPACE   macro kwargs?
+       | (exprl /SPACE)? macro kwargs? spaceI
 macroX :                 macro kwargs
        |  exprL /SPACE   macro kwargs?
        | (exprL /SPACE)? macro kwargs? space2
@@ -89,7 +92,7 @@ square   : /LBRACKET array? /RBRACKET
 @subexpr :  /SPACE? expr4      | indent /feeds
 @space2  :  /SPACE (expr2|kv2) | indent
 @space1  :  /SPACE (expr1|kv)
-@spaceI  :  /SPACE (      kvI|applyI)
+@spaceI  :  /SPACE (expr1|kv|kvI|applyI)
 kwargs   : (/SPACE        kv)+
 @array   :  /SPACE  expr1 (/COMMA /SPACE expr1)* (/NEWLINE /SPACE? /COMMA /SPACE expr1 (/COMMA /SPACE expr1)*)* /SPACE
          |          exprO        (/SPACE exprO)* (/NEWLINE                /SPACE exprO (       /SPACE exprO)*)*
