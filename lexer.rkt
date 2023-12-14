@@ -25,7 +25,7 @@
 
 (define unit-lexer
   (lexer-srcloc
-   [unit     (begin (pop-mode!) (token 'ID (string->symbol lexeme)))]
+   [unit     (begin (pop-mode!) (token 'IDENTIFIER (string->symbol lexeme)))]
    [any-char (begin (pop-mode!) (rewind! empty))]
    [(eof)    (begin (pop-mode!) empty)]))
 

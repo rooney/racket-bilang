@@ -12,9 +12,10 @@ expres : /feeds? expr4
        | expr1
 @expr1 : apply1
        | exprO
-@exprO : applyO|atom
+@exprO : applyO
        | expr0
-@expr0 : apply0|dot|prop|slash|self
+@expr0 : apply0
+       | dot|prop|slash|self
        | bracket
        | it
        | e
@@ -50,21 +51,19 @@ apply3 : (exprB|macro) (/SPACE key /COLON)? /feeds expr3
 apply2 :  exprO kwargs? space2
 apply1 :  exprO kwargs? space1
 applyI :  exprO kwargs? spaceI
-applyO :  atom   bracket+
-apply0 :  expr0 (bracket|dot|slash|op)+
+applyO :  atom ((int|dec) id|e)? bracket*
+apply0 :  expr0 (dot|op|slash|bracket)+
        |  exprO string
        |  op e
-       | (int|dec) id
+       | (int|dec|id) id
 @e     :  int|dec|id
        |  string
-       |  quant
 
-quant  : (INTEGER|DECIMAL) IDENTIFIER
-int    : INTEGER
-dec    : DECIMAL
+int    :  INTEGER
+dec    :  DECIMAL
+op     :  DOLLAR|DASH|SLASH|OPERATOR
 id     : (DOLLAR|DASH)? IDENTIFIER
-op     : OPERATOR|DOLLAR|DASH|SLASH
-key    :              @op|@id
+key    : @op|@id
 atom   :      /COLON (@op|IDENTIFIER|COLON)?
 prop   : @def /COLON        exprO
 kv     : @key /COLON        exprO
