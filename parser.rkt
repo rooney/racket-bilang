@@ -7,22 +7,20 @@ expres : /feeds? expr4
 @exprB : break2|break1|breakO|break
        | expr2
 @expr2 : apply2
+       | macro2
        | comma2|comma1|commaO|comma
-       | macroX
        | expr1
 @expr1 : apply1
        | exprO
-@exprO : applyO
-       | atom
+@exprO : applyO|atom
        | expr0
-@expr0 : apply0
-       | dot|prop|slash|self
+@expr0 : apply0|dot|prop|slash|self
        | bracket
        | it
        | e
 @exprl : expr1|comma1|commaO|comma
 @exprL : exprl|break1|breakO|break
-@exprI : exprl|applyI|macroI|commaI
+@exprI : exprl|commaI|macroI|applyI
 
 @macro : LPAREN RPAREN
        | LBRACE RBRACE
@@ -33,7 +31,7 @@ expres : /feeds? expr4
 macroI :                 macro kwargs
        |  exprl /SPACE   macro kwargs?
        | (exprl /SPACE)? macro kwargs? spaceI
-macroX :                 macro kwargs
+macro2 :                 macro kwargs
        |  exprL /SPACE   macro kwargs?
        | (exprL /SPACE)? macro kwargs? space2
 
@@ -94,9 +92,9 @@ square   : /LBRACKET array? /RBRACKET
 @space1  :  /SPACE (expr1|kv)
 @spaceI  :  /SPACE (expr1|kv|kvI|applyI)
 kwargs   : (/SPACE        kv)+
-@array   :  /SPACE  expr1 (/COMMA /SPACE expr1)* (/NEWLINE /SPACE? /COMMA /SPACE expr1 (/COMMA /SPACE expr1)*)* /SPACE
-         |          exprO        (/SPACE exprO)* (/NEWLINE                /SPACE exprO (       /SPACE exprO)*)*
-         | /INDENT        /COMMA (/SPACE exprI|@indent) (/NEWLINE /COMMA (/SPACE exprI|@indent))* /DEDENT /NEWLINE
+@array   :  /SPACE  expr1 (/COMMA /SPACE expr1)* (/NEWLINE /SPACE? (/COMMA /SPACE expr1)+)* /SPACE
+         |          exprO        (/SPACE exprO)* (/NEWLINE                (/SPACE exprO)+)*
+         | /INDENT        /COMMA (/SPACE exprI|@indent)  (/NEWLINE /COMMA (/SPACE exprI|@indent))* /DEDENT /NEWLINE
 indent   : /INDENT @expres   /DEDENT
 pseudent : /INDENT pseudent? /DEDENT
 feeds    : /(NEWLINE|pseudent)+
