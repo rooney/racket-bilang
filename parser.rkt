@@ -37,16 +37,17 @@ macro2 :                 macro kwargs
        | (exprL /SPACE)? macro kwargs? space2
 
 comma  : (commaO|comma1|expr1) /SPACE? /COMMA
-break  : (breakO|break1)       /SPACE? /COMMA
-       |                exprB /NEWLINE /COMMA
-breakO :  @break (bracket|dot|slash|op)+
+commas : (commaO|comma1|expr1) /SPACE  /COMMA
+break  : (breakO|break1)       /SPACE? /COMMA | exprB /NEWLINE /COMMA
+breaks : (breakO|break1)       /SPACE  /COMMA | exprB /NEWLINE /COMMA
+breakO :  @break (bracket|dot|slash|op)+ 
 commaO :  @comma (bracket|dot|slash|op)+
-comma1 : (@comma|commaO) kwargs? space1
-commaI : (@comma|commaO) kwargs? spaceI
-comma2 : (@comma|commaO) kwargs? space2
-break1 : (@break|breakO) kwargs? space1 | exprB /feeds kv kwargs? space1?
-break2 : (@break|breakO) kwargs? space2 | exprB /feeds kv kwargs? space2
-                                        | exprB /feeds kv2
+comma2 : (@comma|commaO) kwargs? space2 | @commas  kv2
+commaI : (@comma|commaO) kwargs? spaceI | @commas  kvI
+comma1 : (@comma|commaO) kwargs? space1 | @commas (kv|exprO)
+break1 : (@break|breakO) kwargs? space1 | @breaks (kv|exprO) | exprB /feeds kv kwargs? space1?
+break2 : (@break|breakO) kwargs? space2 | @breaks  kv2       | exprB /feeds kv kwargs? space2
+                                                             | exprB /feeds kv2
 apply3 : (exprB|macro) (/SPACE key /COLON)? /feeds expr3
 apply2 :  exprO kwargs? space2
 apply1 :  exprO kwargs? space1
