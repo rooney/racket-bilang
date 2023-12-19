@@ -35,6 +35,7 @@ macroI :                 macro kwargs
 macro2 :                 macro kwargs
        |  exprL /SPACE   macro kwargs?
        | (exprL /SPACE)? macro kwargs? space2
+       | (exprL /SPACE)? macro kwargs? /SPACE expr2
 
 comma  : (commaO|comma1|expr1) /SPACE? /COMMA
 commas : (commaO|comma1|expr1) /SPACE  /COMMA
