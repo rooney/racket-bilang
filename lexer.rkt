@@ -17,7 +17,7 @@
   (unit       (:seq (:+ alpha)                                  prime?))
   (operator   (:seq (:+ opchar)                                 prime?))
   (indent     (:seq (:+ newline) (:* #\tab)))
-  (bublet     (:seq "(:" (:? (:or identifier operator #\:)) #\)))
+  (bublet     (:seq "(:" (:? (:or (:seq (:? #\-) identifier) operator #\:)) #\)))
   (dashes     (:+ #\-))
   (prime?     (:* #\'))
   (d-quote        #\")
