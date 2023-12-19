@@ -27,7 +27,7 @@ expres : /feeds? expr4
        | LBRACE RBRACE
        | DOT COLON
        | def COLON
-       | BUBLET
+       | bublet
        | op
 macroI :                 macro kwargs
        |  exprl /SPACE   macro kwargs?
@@ -70,6 +70,7 @@ kv     : @key /COLON        exprO
 kvI    : @key /COLON /SPACE exprI
 kv2    : @key /COLON /SPACE expr2
        | @key /COLON @indent
+bublet : (key /COLON)? BUBLET
 def    : self op? (/DOT @key op?)*
        |          (/DOT @key op?)+
 dot    :           /DOT @id
