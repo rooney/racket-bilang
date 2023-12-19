@@ -87,10 +87,10 @@ parens   : /LPAREN  subexpr /RPAREN
 braces   : /LBRACE  subexpr /RBRACE
 square   : /LBRACKET array? /RBRACKET
 @bracket : braces|parens|square
-@subexpr :  /SPACE? expr4      | indent /feeds
-@space2  :  /SPACE (expr2|kv2) | indent
-@space1  :  /SPACE (expr1|kv)
+@subexpr :  /SPACE? expr4                | indent /feeds
+@space2  :  /SPACE          (kv2|apply2) | indent
 @spaceI  :  /SPACE (expr1|kv|kvI|applyI)
+@space1  :  /SPACE (expr1|kv)
 kwargs   : (/SPACE        kv)+
 @array   :  /SPACE  expr1 (/COMMA /SPACE expr1)* (/NEWLINE /SPACE? (/COMMA /SPACE expr1)+)* /SPACE
          |          exprO        (/SPACE exprO)* (/NEWLINE                (/SPACE exprO)+)*
