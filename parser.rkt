@@ -23,10 +23,10 @@ expres : /feeds? expr4
 @exprL : exprl|break1|breakO|break
 @exprI : exprl|commaI|macroI|applyI
 
-@macro : LPAREN RPAREN
-       | LBRACE RBRACE
-       | DOT COLON
-       | def COLON
+@macro : LPAREN /RPAREN
+       | LBRACE /RBRACE
+       | DOT /COLON
+       | def /COLON
        | bublet
        | op
 macroI :                 macro kwargs
