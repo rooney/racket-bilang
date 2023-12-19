@@ -20,6 +20,7 @@
   (bublet     (:seq "(:" (:? (:or (:seq (:? #\-) identifier) operator #\:)) #\)))
   (dashes     (:+ #\-))
   (prime?     (:* #\'))
+  (s-quote        #\')
   (d-quote        #\")
   (b-quote        #\`))
 
@@ -47,8 +48,10 @@
    [integer    (token 'INTEGER (begin (push-mode! unit-lexer) (string->number lexeme)))]
    [decimal    (token 'DECIMAL (begin (push-mode! unit-lexer) (string->number lexeme)))]
    [bublet     (token 'BUBLET (string->symbol (substring lexeme 2 (- (string-length lexeme) 1))))]
+   [(:seq s-quote indent) s-block]
    [(:seq d-quote indent) d-block]
    [(:seq b-quote indent) b-block]
+   [      s-quote         s-str]
    [      d-quote         d-str]
    [      b-quote         b-str]
    ["{," (list (token-LBRACE!) (token 'IT '|,|))]
@@ -91,6 +94,12 @@
         [(< new-dent next-dent) NODENT]
         [(> new-dent next-dent) (error-on-indentation next-dent)])))
 
+(define-macro s-str
+  #'(token-QUOTE! (strlex (s-quote)
+                          [s-quote (token-UNQUOTE! lexeme)]
+                          [line-break (error-unterminated-string)]
+                          [(eof) (error-unterminated-string)])))
+
 (define-macro d-str
   #'(token-QUOTE! (strlex-i (d-quote)
                             [d-quote (token-UNQUOTE! lexeme)]
@@ -122,11 +131,18 @@
               CUSTOM-RULES ...
               [indent (extract-indent!)]))
 
+(define-macro s-block
+  #'(append (list (token-QUOTE! (lexer-srcloc [s-quote  (token-UNQUOTE!)]
+                                              [any-char (error-unterminated-string)]
+                                              [(eof)    (error-unterminated-string)]))
+                  (indent!      (blockstr     [(eof)    (error-unterminated-string)])))
+            (-1LF (extract-indent!))))
+
 (define-macro d-block
   #'(append (list (token-QUOTE! (lexer-srcloc [d-quote  (token-UNQUOTE!)]
                                               [any-char (error-unterminated-string)]
                                               [(eof)    (error-unterminated-string)]))
-                  (indent!      (blockstr     [(eof)    (error-unterminated-string)])))
+                  (indent!      (blockstr-i   [(eof)    (error-unterminated-string)])))
             (-1LF (extract-indent!))))
 
 (define-macro b-block
