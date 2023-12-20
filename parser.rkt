@@ -91,7 +91,7 @@ parens   : /LPAREN  subexpr /RPAREN
 braces   : /LBRACE  subexpr /RBRACE
 square   : /LBRACKET array? /RBRACKET
 @bracket : braces|parens|square
-@subexpr :  /SPACE? expr4                | indent /feeds
+@subexpr :  /SPACE? expr4                | indent /feeds | op
 @space2  :  /SPACE          (kv2|apply2) | indent
 @spaceI  :  /SPACE (expr1|kv|kvI|applyI)
 @space1  :  /SPACE (expr1|kv)
