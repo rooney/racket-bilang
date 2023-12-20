@@ -53,19 +53,21 @@ apply3 : (exprB|macro) (/SPACE key /COLON)? /feeds expr3
 apply2 :  exprO kwargs? space2
 apply1 :  exprO kwargs? space1
 applyI :  exprO kwargs? spaceI
-applyO :  atom ((int|dec) id|e)? bracket*
+applyO :  atom (atom|e)? bracket*
 apply0 :  expr0 (dot|op|slash|bracket)+
        |  exprO string
        |  op e
-       | (int|dec|id) id
-@e     :  int|dec|id
+       |  id id
+@e     :  id
+       |  amount|int|dec
        |  string
 
+amount : (INTEGER|DECIMAL) id
 int    :  INTEGER
 dec    :  DECIMAL
 op     :  DOLLAR|DASH|SLASH|OPERATOR
 id     : (DOLLAR|DASH)? IDENTIFIER
-key    : @op|@id
+key    :              @op|@id
 atom   :      /COLON (@op|IDENTIFIER|COLON)?
 prop   : @def /COLON        exprO
 kv     : @key /COLON        exprO
