@@ -7,7 +7,7 @@
   (alnums     (:+ (:/ #\a #\z #\A #\Z #\0 #\9)))
   (digits     (:+ (:/                 #\0 #\9)))
   (opchar         (char-set "+/-><=*\\~?!&|^#%$@_"))
-  (line-break      (char-set "\r\n"))
+  (line-break     (char-set "\r\n"))
   (spacetabs  (:+ (:or #\space #\tab)))
   (spacetabs? (:? spacetabs))
   (newline    (:seq spacetabs? (:or "\r\n" "\n")))
@@ -17,7 +17,6 @@
   (unit       (:seq (:+ alpha)                                  prime?))
   (operator   (:seq (:+ opchar)                                 prime?))
   (indent     (:seq (:+ newline) (:* #\tab)))
-  (bublet     (:seq "(:" (:? (:or (:seq (:? #\-) identifier) operator #\:)) #\)))
   (dashes     (:+ #\-))
   (prime?     (:* #\'))
   (s-quote        #\')
@@ -47,14 +46,14 @@
    [identifier (token 'IDENTIFIER                             (string->symbol lexeme))]
    [integer    (token 'INTEGER (begin (push-mode! unit-lexer) (string->number lexeme)))]
    [decimal    (token 'DECIMAL (begin (push-mode! unit-lexer) (string->number lexeme)))]
-   [bublet     (token 'BUBLET (string->symbol (substring lexeme 2 (- (string-length lexeme) 1))))]
    [(:seq s-quote indent) s-block]
    [(:seq d-quote indent) d-block]
    [(:seq b-quote indent) b-block]
    [      s-quote         s-str]
    [      d-quote         d-str]
    [      b-quote         b-str]
-   ["{," (list (token-LBRACE!) (token 'IT '|,|))]
+   ["{," (list (token-LBRACE!) (token 'IT     '|,|))]
+   ["(:" (list (token-LPAREN!) (token 'BUBLET '|:|))]
    [#\(        (token-LPAREN!)]
    [#\)        (token-RPAREN!)]
    [#\{        (token-LBRACE!)]

@@ -3,6 +3,7 @@
 expres : /feeds? expr4
 @expr4 : expr3 /feeds? /SPACE?
 @expr3 : apply3
+       | bublet
        | exprB
 @exprB : break2|break1|breakO|break
        | expr2
@@ -13,6 +14,7 @@ expres : /feeds? expr4
 @expr1 : apply1
        | exprO
 @exprO : applyO
+       | atom
        | expr0
 @expr0 : apply0
        | dot|prop|slash|self
@@ -31,11 +33,11 @@ expres : /feeds? expr4
        | op
 macroI :                 macro kwargs
        |  exprl /SPACE   macro kwargs?
-       | (exprl /SPACE)? macro kwargs? spaceI
+       | (exprl /SPACE)? macro kwargs? (spaceI|/SPACE bublet)
+       | (exprl /SPACE)? macro kwargs? 
 macro2 :                 macro kwargs
        |  exprL /SPACE   macro kwargs?
-       | (exprL /SPACE)? macro kwargs? space2
-       | (exprL /SPACE)? macro kwargs? /SPACE expr2
+       | (exprL /SPACE)? macro kwargs? (space2|/SPACE (bublet|expr2))
 
 comma  : (commaO|comma1|expr1) /SPACE? /COMMA
 commas : (commaO|comma1|expr1) /SPACE  /COMMA
@@ -48,12 +50,12 @@ commaI : (@comma|commaO) kwargs? spaceI | @commas  kvI
 comma1 : (@comma|commaO) kwargs? space1 | @commas (kv|exprO)
 break1 : (@break|breakO) kwargs? space1 | @breaks (kv|exprO)
 break2 : (@break|breakO) kwargs? space2 | @breaks  kv2 
-                                        | exprB /feeds kv2
+       |                              exprB /feeds kv2
 apply3 : (exprB|macro) (/SPACE key /COLON)? /feeds expr3
 apply2 :  exprO kwargs? space2
 apply1 :  exprO kwargs? space1
 applyI :  exprO kwargs? spaceI
-applyO :  atom (atom|e)? bracket*
+applyO :  atom (atom|e|bracket) bracket*
 apply0 :  expr0 (dot|op|slash|bracket)+
        |  exprO string
        |  op e
@@ -74,7 +76,6 @@ kv     : @key /COLON        exprO
 kvI    : @key /COLON /SPACE exprI
 kv2    : @key /COLON /SPACE expr2
        | @key /COLON @indent
-bublet : (key /COLON)* BUBLET
 def    : self op? (/DOT @key op?)*
        |          (/DOT @key op?)+
 dot    :           /DOT @id
@@ -87,6 +88,7 @@ it     : /IT
 string : strix | str
 interp : INTERPOLATE (braces|indent)
                      
+bublet   : /LPAREN /BUBLET (op|SLASH? (key /SLASH))? key /RPAREN
 parens   : /LPAREN  subexpr /RPAREN
 braces   : /LBRACE  subexpr /RBRACE
 square   : /LBRACKET array? /RBRACKET
