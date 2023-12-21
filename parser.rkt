@@ -74,7 +74,7 @@ kv     : @key /COLON        exprO
 kvI    : @key /COLON /SPACE exprI
 kv2    : @key /COLON /SPACE expr2
        | @key /COLON @indent
-bublet : (key /COLON)? BUBLET
+bublet : (key /COLON)* BUBLET
 def    : self op? (/DOT @key op?)*
        |          (/DOT @key op?)+
 dot    :           /DOT @id
