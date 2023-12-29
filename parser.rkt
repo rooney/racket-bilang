@@ -3,7 +3,7 @@
 expres : /feeds? expr4
 @expr4 : expr3 /feeds? /SPACE?
 @expr3 : apply3
-       | bublet
+       | atom
        | exprB
 @exprB : break2|break1|breakO|break
        | expr2
@@ -14,7 +14,7 @@ expres : /feeds? expr4
 @expr1 : apply1
        | exprO
 @exprO : applyO
-       | atom
+       | ion
        | expr0
 @expr0 : apply0
        | dot|prop|slash|self
@@ -29,15 +29,15 @@ expres : /feeds? expr4
        | LBRACE /RBRACE
        | DOT /COLON
        | def /COLON
-       | bublet
+       | atom
        | op
 macroI :                 macro kwargs
        |  exprl /SPACE   macro kwargs?
-       | (exprl /SPACE)? macro kwargs? (spaceI|/SPACE bublet)
+       | (exprl /SPACE)? macro kwargs? (spaceI|/SPACE atom)
        | (exprl /SPACE)? macro kwargs? 
 macro2 :                 macro kwargs
        |  exprL /SPACE   macro kwargs?
-       | (exprL /SPACE)? macro kwargs? (space2|/SPACE (bublet|expr2))
+       | (exprL /SPACE)? macro kwargs? (space2|/SPACE (atom|expr2))
 
 comma  : (commaO|comma1|expr1) /SPACE? /COMMA
 commas : (commaO|comma1|expr1) /SPACE  /COMMA
@@ -55,7 +55,7 @@ apply3 : (exprB|macro) (/SPACE key /COLON)? /feeds expr3
 apply2 :  exprO kwargs? space2
 apply1 :  exprO kwargs? space1
 applyI :  exprO kwargs? spaceI
-applyO :  atom (atom|e|bracket) bracket*
+applyO :  ion (ion|e|bracket) bracket*
 apply0 :  expr0 (dot|op|slash|bracket)+
        |  exprO string
        |  op e
@@ -70,7 +70,7 @@ dec    :  DECIMAL
 op     :  DOLLAR|DASH|SLASH|OPERATOR
 id     : (DOLLAR|DASH)? IDENTIFIER
 key    :              @op|@id
-atom   :      /COLON (@op|IDENTIFIER|COLON)?
+ion   :      /COLON (@op|IDENTIFIER|COLON)?
 prop   : @def /COLON        exprO
 kv     : @key /COLON        exprO
 kvI    : @key /COLON /SPACE exprI
@@ -88,7 +88,7 @@ it     : /IT
 string : strix | str
 interp : INTERPOLATE (braces|indent)
                      
-bublet   : /LPAREN /BUBLET (op|SLASH? (key /SLASH))? key /RPAREN
+atom     : /LPAREN /PROTON (op|SLASH? (key /SLASH))? key /RPAREN
 parens   : /LPAREN  subexpr /RPAREN
 braces   : /LBRACE  subexpr /RBRACE
 square   : /LBRACKET array? /RBRACKET
