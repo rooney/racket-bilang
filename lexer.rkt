@@ -39,7 +39,6 @@
                [(= dent _level) (token-NEWLINE)]
                [(< dent _level) (reset-level! dent)]))]
    [spacetabs  (token 'SPACE  #f)]
-   [#\$        (token 'DOLLAR '$)]
    [#\/        (token 'SLASH  '/)]
    [dashes     (token 'DASH                                   (string->symbol lexeme))]
    [operator   (token 'OPERATOR                               (string->symbol lexeme))]

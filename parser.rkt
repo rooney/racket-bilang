@@ -67,18 +67,18 @@ apply0 :  expr0 (dot|op|slash|bracket)+
 amount : (INTEGER|DECIMAL) id
 int    :  INTEGER
 dec    :  DECIMAL
-op     :  DOLLAR|DASH|SLASH|OPERATOR
-id     : (DOLLAR|DASH)? IDENTIFIER
-key    :              @op|@id
-ion    :      /COLON (@op|IDENTIFIER|COLON)?
+op     :  DASH|SLASH|OPERATOR
+id     :  DASH? IDENTIFIER DASH?
+ion    :      /COLON (COLON|@key)?
 prop   : @def /COLON        exprO
 kv     : @key /COLON        exprO
 kvI    : @key /COLON /SPACE exprI
 kv2    : @key /COLON /SPACE expr2
        | @key /COLON @indent
-def    :          (/DOT @key op?)+
-dot    :           /DOT @id
-slash  :                /SLASH         IDENTIFIER
+key    : @op  | @id
+slash  : /SLASH @id
+dot    :   /DOT @id
+def    :  (/DOT @key op?)+
 it     : /IT
 @str   : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
