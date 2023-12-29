@@ -17,7 +17,7 @@ expres : /feeds? expr4
        | ion
        | expr0
 @expr0 : apply0
-       | dot|prop|slash|self
+       | dot|prop|slash
        | bracket
        | it
        | e
@@ -70,16 +70,14 @@ dec    :  DECIMAL
 op     :  DOLLAR|DASH|SLASH|OPERATOR
 id     : (DOLLAR|DASH)? IDENTIFIER
 key    :              @op|@id
-ion   :      /COLON (@op|IDENTIFIER|COLON)?
+ion    :      /COLON (@op|IDENTIFIER|COLON)?
 prop   : @def /COLON        exprO
 kv     : @key /COLON        exprO
 kvI    : @key /COLON /SPACE exprI
 kv2    : @key /COLON /SPACE expr2
        | @key /COLON @indent
-def    : self op? (/DOT @key op?)*
-       |          (/DOT @key op?)+
+def    :          (/DOT @key op?)+
 dot    :           /DOT @id
-self   :           /DOT /SLASH DOLLAR? IDENTIFIER
 slash  :                /SLASH         IDENTIFIER
 it     : /IT
 @str   : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
