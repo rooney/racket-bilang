@@ -13,21 +13,23 @@
   (newline    (:seq spacetabs? (:or "\r\n" "\n")))
   (integer    (:seq digits (:* (:seq #\_ digits))))
   (decimal    (:seq integer #\. integer))
-  (identifier (:seq     alpha alnums? (:* (:seq dashes alnums)) prime?))
-  (unit       (:seq (:+ alpha)                                  prime?))
-  (operator   (:seq (:+ opchar)                                 prime?))
+  (identifier (:seq     alpha alnums? (:* (:seq dashes alnums))))
+  (unit       (:seq (:+ alpha) (:? prime)))
+  (operator   (:seq (:+ opchar)))
   (indent     (:seq (:+ newline) (:* #\tab)))
   (dashes     (:+ #\-))
-  (prime?     (:* #\'))
+  (prime      (:+ #\'))
   (s-quote        #\')
   (d-quote        #\")
   (b-quote        #\`))
 
+(define prime-lexer
+  (sublexer
+   [prime (begin (pop-mode!) (token 'PRIME (string->symbol lexeme)))]))
+
 (define unit-lexer
-  (lexer-srcloc
-   [unit     (begin (pop-mode!) (token 'IDENTIFIER (string->symbol lexeme)))]
-   [any-char (begin (pop-mode!) (rewind! empty))]
-   [(eof)    (begin (pop-mode!) empty)]))
+  (sublexer
+   [unit  (begin (pop-mode!) (token 'IDENTIFIER (string->symbol lexeme)))]))
 
 (define main-lexer
   (lexer-srcloc
@@ -39,12 +41,14 @@
                [(= dent _level) (token-NEWLINE)]
                [(< dent _level) (reset-level! dent)]))]
    [spacetabs  (token 'SPACE  #f)]
-   [#\/        (token 'SLASH  '/)]
-   [dashes     (token 'DASH                                   (string->symbol lexeme))]
-   [operator   (token 'OPERATOR                               (string->symbol lexeme))]
-   [identifier (token 'IDENTIFIER                             (string->symbol lexeme))]
-   [integer    (token 'INTEGER (begin (push-mode! unit-lexer) (string->number lexeme)))]
-   [decimal    (token 'DECIMAL (begin (push-mode! unit-lexer) (string->number lexeme)))]
+   [#\?        (token 'QUESTION-MARK (begin (push-mode! prime-lexer) '?))]
+   [#\$        (token 'DOLLAR        (begin (push-mode! prime-lexer) '$))]
+   [#\/        (token 'SLASH         (begin (push-mode! prime-lexer) '/))]
+   [dashes     (token 'DASH          (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
+   [operator   (token 'OPERATOR      (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
+   [identifier (token 'IDENTIFIER    (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
+   [integer    (token 'INTEGER       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
+   [decimal    (token 'DECIMAL       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
    [(:seq s-quote indent) s-block]
    [(:seq d-quote indent) d-block]
    [(:seq b-quote indent) b-block]
@@ -66,6 +70,11 @@
    [(eof) (if (> _level 0)
               (reset-level! 0) 
               (void))]))
+
+(define-macro (sublexer RULES ...)
+  #'(lexer-srcloc RULES ...
+                  [any-char (begin (pop-mode!) (rewind! empty))]
+                  [(eof)    (begin (pop-mode!) empty)]))
 
 (define-macro (strlex (CUSTOM-CHARS ...) CUSTOM-RULES ...)
   #'(lexer-srcloc CUSTOM-RULES ...
@@ -190,6 +199,10 @@
 
 (define (debug x)
   (println x) x)
+
+(define (last-token-type)
+  (if _last-token (token-struct-type (srcloc-token-token _last-token))
+      null))
 
 (define _last-token null)
 (define _pending-tokens (list))
