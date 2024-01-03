@@ -60,7 +60,7 @@ applyO :  anion (id|string|group) group*
 apply0 :  expr0 (dot|op|slash|group)+
        |  exprO string
        |  op e
-       |  (int|dec|id) id
+       |  (int|dec) id
 @e     :   int|dec|id
        |   string
 
