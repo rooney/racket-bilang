@@ -6,7 +6,7 @@
   (alnums?    (:* (:/ #\a #\z #\A #\Z #\0 #\9)))
   (alnums     (:+ (:/ #\a #\z #\A #\Z #\0 #\9)))
   (digits     (:+ (:/                 #\0 #\9)))
-  (opchar         (char-set "+/-><=*\\~?!&|^#%$@_"))
+  (symbol         (char-set "+/-><=*\\~?!&|^#%$@_"))
   (line-break     (char-set "\r\n"))
   (spacetabs  (:+ (:or #\space #\tab)))
   (spacetabs? (:? spacetabs))
@@ -15,7 +15,7 @@
   (decimal    (:seq integer #\. integer))
   (identifier (:seq     alpha alnums? (:* (:seq dashes alnums))))
   (unit       (:seq (:+ alpha) (:? prime)))
-  (operator   (:seq (:+ opchar)))
+  (radical    (:seq (:+ symbol)))
   (indent     (:seq (:+ newline) (:* #\tab)))
   (dashes     (:+ #\-))
   (prime      (:+ #\'))
@@ -45,7 +45,7 @@
    [#\$        (token 'DOLLAR        (begin (push-mode! prime-lexer) '$))]
    [#\/        (token 'SLASH         (begin (push-mode! prime-lexer) '/))]
    [dashes     (token 'DASH          (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
-   [operator   (token 'OPERATOR      (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
+   [radical    (token 'RADICAL       (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
    [identifier (token 'IDENTIFIER    (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
    [integer    (token 'INTEGER       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
    [decimal    (token 'DECIMAL       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
