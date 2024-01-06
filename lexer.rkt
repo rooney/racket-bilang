@@ -21,7 +21,7 @@
   (prime      (:+ #\'))
   (s-quote        #\')
   (d-quote        #\")
-  (b-quote        #\`)
+  (grave          #\`)
   (comma          #\,))
 
 (define prime-lexer
@@ -52,10 +52,10 @@
    [decimal    (token 'DECIMAL       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
    [(:seq s-quote indent)  s-block]
    [(:seq d-quote indent)  d-block]
-   [(:seq b-quote indent)  b-block]
+   [(:seq   grave indent)  g-block]
    [      s-quote          s-str]
    [      d-quote          d-str]
-   [      b-quote          b-str]
+   [        grave          g-str]
    ["(:" (list (token-LPAREN!) (token 'PROTON '|:|))]
    ["{," (list (token-LBRACE!) (token 'IT     '|,|))]
    [#\(        (token-LPAREN!)]
@@ -91,8 +91,8 @@
             [(:seq "`{" indent)         (str-interp (token-LBRACE!) #:dent-or (error-on-indentation))]
             CUSTOM-RULES ...))
 
-(define-macro (b-lex (CUSTOM-CHARS ...) CUSTOM-RULES ...)
-  #'(list (token 'BACKTICK '|`|)
+(define-macro (g-lex (CUSTOM-CHARS ...) CUSTOM-RULES ...)
+  #'(list (token 'GRAVE '|`|)
           (token-QUOTE! (strlex-i (CUSTOM-CHARS ...)
                                   CUSTOM-RULES ...
                                   [line-break (token-UNQUOTE! lexeme)]
@@ -127,33 +127,33 @@
                             [d-quote (token-UNQUOTE! lexeme)]
                             [(eof) (error-unterminated-string)])))
 
-(define-macro b-str
+(define-macro g-str
   #'(let ([prev-token (if _last-token
                           (token-struct-type (srcloc-token-token _last-token))
                           #f)])
       (if (member prev-token '(IDENTIFIER QUESTION-MARK DOLLAR SLASH DASH RADICAL))
           (let ([next-char (read-char input-port)])
             (cond
-              ((equal? next-char #\() b-group)
-              ((equal? next-char #\space) b-span)
-              (else (begin (rewind! 1 empty) b-word))))
-          b-line)))
+              ((equal? next-char #\() g-group)
+              ((equal? next-char #\space) g-span)
+              (else (begin (rewind! 1 empty) g-word))))
+          g-line)))
 
-(define-macro b-word
-  #'(b-lex (comma) [comma (rewind! (token-UNQUOTE!))]))
+(define-macro g-word
+  #'(g-lex (comma) [comma (rewind! (token-UNQUOTE!))]))
 
-(define-macro b-span
-  #'(b-lex (#\space) [" ," (rewind! (token-UNQUOTE!))]))
+(define-macro g-span
+  #'(g-lex (#\space) [" ," (rewind! (token-UNQUOTE!))]))
 
-(define-macro b-group
-  #'(b-lex (#\( #\))
+(define-macro g-group
+  #'(g-lex (#\( #\))
            [#\(        (begin (push-mode! find-endparen) (token 'STRING lexeme))]
            [#\)        (token-UNQUOTE!)]
            [line-break error-missing-endparen]
            [(eof)      error-missing-endparen]))))
 
-(define-macro b-line
-  #'(b-lex ()))
+(define-macro g-line
+  #'(g-lex ()))
 
 (define-macro (blockstr CUSTOM-RULES ...)
   #'(strlex ()
@@ -180,8 +180,8 @@
                   (indent!      (blockstr-i   [(eof)    (error-unterminated-string)])))
             (-1LF (extract-indent!))))
 
-(define-macro b-block
-  #'(append (list (token 'BACKTICK '|`|)
+(define-macro g-block
+  #'(append (list (token 'GRAVE '|`|)
                   (token-QUOTE! dedent->unquote)
                   (indent! (blockstr-i [(eof) (reset-level! 0)])))
             (-1LF (extract-indent!))))

@@ -76,12 +76,11 @@ key    :  @radic | @id
 slash  :    /SLASH @id
 dot    :      /DOT @id
 it     : /IT
+interp :  INTERPOLATE (braces|indent)
 str    : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
        | /QUOTE         (STRING|interp)*                 /UNQUOTE
-bacstr : /BACKTICK @str
-string : @bacstr | @str
-interp : INTERPOLATE (braces|indent)
-
+string : @graving | @str
+graving  : /GRAVE @str
 atom     : /LPAREN /PROTON ((@nuclei? COLON? /SPACE COLON)? @nuclei)? /RPAREN
          | /LPAREN /PROTON            COLON                           /RPAREN
 parens   : /LPAREN  (subexpr|radic) /RPAREN
