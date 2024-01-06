@@ -21,7 +21,8 @@
   (prime      (:+ #\'))
   (s-quote        #\')
   (d-quote        #\")
-  (b-quote        #\`))
+  (b-quote        #\`)
+  (comma          #\,))
 
 (define prime-lexer
   (sublexer
@@ -29,7 +30,7 @@
 
 (define unit-lexer
   (sublexer
-   [unit  (begin (pop-mode!) (token 'IDENTIFIER (string->symbol lexeme)))]))
+   [unit (begin (pop-mode!) (token 'IDENTIFIER (string->symbol lexeme)))]))
 
 (define main-lexer
   (lexer-srcloc
@@ -40,7 +41,7 @@
                [(= dent next-level) (indent!)]
                [(= dent _level) (token-NEWLINE)]
                [(< dent _level) (reset-level! dent)]))]
-   [spacetabs  (token 'SPACE  #f)]
+   [spacetabs  (token 'SPACE #f)]
    [#\?        (token 'QUESTION-MARK (begin (push-mode! prime-lexer) '?))]
    [#\$        (token 'DOLLAR        (begin (push-mode! prime-lexer) '$))]
    [#\/        (token 'SLASH         (begin (push-mode! prime-lexer) '/))]
@@ -49,12 +50,12 @@
    [identifier (token 'IDENTIFIER    (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
    [integer    (token 'INTEGER       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
    [decimal    (token 'DECIMAL       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
-   [(:seq s-quote indent) s-block]
-   [(:seq d-quote indent) d-block]
-   [(:seq b-quote indent) b-block]
-   [      s-quote         s-str]
-   [      d-quote         d-str]
-   [      b-quote         b-str]
+   [(:seq s-quote indent)  s-block]
+   [(:seq d-quote indent)  d-block]
+   [(:seq b-quote indent)  b-block]
+   [      s-quote          s-str]
+   [      d-quote          d-str]
+   [      b-quote          b-str]
    ["(:" (list (token-LPAREN!) (token 'PROTON '|:|))]
    ["{," (list (token-LBRACE!) (token 'IT     '|,|))]
    [#\(        (token-LPAREN!)]
@@ -79,15 +80,24 @@
 (define-macro (strlex (CUSTOM-CHARS ...) CUSTOM-RULES ...)
   #'(lexer-srcloc CUSTOM-RULES ...
                   [(:+ (:~ line-break CUSTOM-CHARS ...)) (token 'STRING lexeme)]
+                  [line-break (error-unterminated-string)]
                   [any-char (token 'STRING lexeme)]))
 
 (define-macro (strlex-i (CUSTOM-CHARS ...) CUSTOM-RULES ...)
   #'(strlex (#\` CUSTOM-CHARS ...)
-             [(:seq "`{" spacetabs? "}") (token 'STRING "")]
-             [(:seq "`{" spacetabs?) (list (token 'INTERPOLATE 0) (token-LBRACE!))]
-             [(:seq "`{" indent "}") (escape-newline)]
-             [(:seq "`{" indent) (str-interp (token-LBRACE!) #:dent-or (error-on-indentation))]
-             CUSTOM-RULES ...))
+            [(:seq "`{" spacetabs? "}") (token 'STRING "")]
+            [(:seq "`{" spacetabs?)     (list (token 'INTERPOLATE 0) (token-LBRACE!))]
+            [(:seq "`{" indent "}")     (escape-newline)]
+            [(:seq "`{" indent)         (str-interp (token-LBRACE!) #:dent-or (error-on-indentation))]
+            CUSTOM-RULES ...))
+
+(define-macro (b-lex (CUSTOM-CHARS ...) CUSTOM-RULES ...)
+  #'(list (token 'BACKTICK '|`|)
+          (token-QUOTE! (strlex-i (CUSTOM-CHARS ...)
+                                  CUSTOM-RULES ...
+                                  [line-break (token-UNQUOTE! lexeme)]
+                                  [(eof) (cons (token-UNQUOTE!)
+                                               (reset-level! 0))]))))
 
 (define-macro (str-interp TOKENS ... #:dent-or NODENT)
   #'(let ([current-dent _dent]
@@ -101,31 +111,49 @@
         [(< new-dent next-dent) NODENT]
         [(> new-dent next-dent) (error-on-indentation next-dent)])))
 
+(define find-endparen (strlex-i (#\( #\) line-break)
+                                [#\( (begin (push-mode! find-endparen) (token 'STRING lexeme))]
+                                [#\) (begin (pop-mode!)                (token 'STRING lexeme))]
+                                [line-break error-missing-endparen]
+                                [(eof)      error-missing-endparen]))
+
 (define-macro s-str
   #'(token-QUOTE! (strlex (s-quote)
                           [s-quote (token-UNQUOTE! lexeme)]
-                          [line-break (error-unterminated-string)]
                           [(eof) (error-unterminated-string)])))
 
 (define-macro d-str
   #'(token-QUOTE! (strlex-i (d-quote)
                             [d-quote (token-UNQUOTE! lexeme)]
-                            [line-break (error-unterminated-string)]
                             [(eof) (error-unterminated-string)])))
 
 (define-macro b-str
-  #'(list (token 'BACKTICK '|`|)
-          (token-QUOTE! (strlex-i (#\( #\) #\, line-break)
-                                  [(:or #\) #\, line-break) (rewind! (token-UNQUOTE!))]
-                                  [#\( (begin (push-mode! find-endparen) (token 'STRING lexeme))]
-                                  [(eof) (cons (token-UNQUOTE!)
-                                               (reset-level! 0))]))))
+  #'(let ([prev-token (if _last-token
+                          (token-struct-type (srcloc-token-token _last-token))
+                          #f)])
+      (if (member prev-token '(IDENTIFIER QUESTION-MARK DOLLAR SLASH DASH RADICAL))
+          (let ([next-char (read-char input-port)])
+            (cond
+              ((equal? next-char #\() b-group)
+              ((equal? next-char #\space) b-span)
+              (else (begin (rewind! 1 empty) b-word))))
+          b-line)))
 
-(define find-endparen (strlex-i (#\( #\) line-break)
-                                [#\( (begin (push-mode! find-endparen) (token 'STRING lexeme))]
-                                [#\) (begin (pop-mode!)                (token 'STRING lexeme))]
-                                [line-break (error "Missing closing parenthesis")]
-                                [(eof)      (error "Missing closing parenthesis")]))
+(define-macro b-word
+  #'(b-lex (comma) [comma (rewind! (token-UNQUOTE!))]))
+
+(define-macro b-span
+  #'(b-lex (#\space) [" ," (rewind! (token-UNQUOTE!))]))
+
+(define-macro b-group
+  #'(b-lex (#\( #\))
+           [#\(        (begin (push-mode! find-endparen) (token 'STRING lexeme))]
+           [#\)        (token-UNQUOTE!)]
+           [line-break error-missing-endparen]
+           [(eof)      error-missing-endparen]))))
+
+(define-macro b-line
+  #'(b-lex ()))
 
 (define-macro (blockstr CUSTOM-RULES ...)
   #'(strlex ()
@@ -197,14 +225,13 @@
 (define-macro error-unterminated-string
   #'(error "Unterminated string (missing closing quote)"))
 
+(define-macro error-missing-endparen
+  #'(error "Missing closing parenthesis"))
+
 (define (debug x)
   (println x) x)
 
-(define (last-token-type)
-  (if _last-token (token-struct-type (srcloc-token-token _last-token))
-      null))
-
-(define _last-token null)
+(define _last-token #f)
 (define _pending-tokens (list))
 (define _indents (list))
 (define _modestack (list))

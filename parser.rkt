@@ -95,7 +95,7 @@ brackets : /LBRACKET array?         /RBRACKET
 kwargs   : (/SPACE        kv)+
 @array   :  /SPACE  exprI                        (/NEWLINE /SPACE? /COMMA  /SPACE exprI)*   /SPACE
          |          exprO (/SPACE exprO)*        (/NEWLINE                (/SPACE exprO)+)*
-         | /INDENT /COMMA (/SPACE exprI|@indent) (/NEWLINE /COMMA (@indent|/SPACE exprI)*   /DEDENT /NEWLINE
+         | /INDENT /COMMA (/SPACE exprI|@indent) (/NEWLINE /COMMA (@indent|/SPACE exprI))*  /DEDENT /NEWLINE
 indent   : /INDENT @expres   /DEDENT
 pseudent : /INDENT pseudent? /DEDENT
 feeds    : /(NEWLINE|pseudent)+
