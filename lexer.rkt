@@ -6,7 +6,7 @@
   (alnums?    (:* (:/ #\a #\z #\A #\Z #\0 #\9)))
   (alnums     (:+ (:/ #\a #\z #\A #\Z #\0 #\9)))
   (digits     (:+ (:/                 #\0 #\9)))
-  (symbol         (char-set "+/-><=*\\~?!&|^#%$@_"))
+  (symbol     (:+ (char-set "+/-><=*\\~?!&|^#%$@_")))
   (line-break     (char-set "\r\n"))
   (spacetabs  (:+ (:or #\space #\tab)))
   (spacetabs? (:? spacetabs))
@@ -15,7 +15,6 @@
   (decimal    (:seq integer #\. integer))
   (identifier (:seq     alpha alnums? (:* (:seq dashes alnums))))
   (unit       (:seq (:+ alpha) (:? prime)))
-  (radical    (:seq (:+ symbol)))
   (indent     (:seq (:+ newline) (:* #\tab)))
   (dashes     (:+ #\-))
   (prime      (:+ #\'))
@@ -46,7 +45,7 @@
    [#\$        (token 'DOLLAR        (begin (push-mode! prime-lexer) '$))]
    [#\/        (token 'SLASH         (begin (push-mode! prime-lexer) '/))]
    [dashes     (token 'DASH          (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
-   [radical    (token 'RADICAL       (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
+   [symbol     (token 'SYMBOL        (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
    [identifier (token 'IDENTIFIER    (begin (push-mode! prime-lexer) (string->symbol lexeme)))]
    [integer    (token 'INTEGER       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
    [decimal    (token 'DECIMAL       (begin (push-mode! unit-lexer)  (string->number lexeme)))]
@@ -131,7 +130,7 @@
   #'(let ([prev-token (if _last-token
                           (token-struct-type (srcloc-token-token _last-token))
                           #f)])
-      (if (member prev-token '(IDENTIFIER QUESTION-MARK DOLLAR SLASH DASH RADICAL))
+      (if (member prev-token '(IDENTIFIER SYMBOL DOLLAR DASH SLASH QUESTION-MARK))
           (let ([next-char (read-char input-port)])
             (cond
               ((equal? next-char #\() g-group)
@@ -150,7 +149,7 @@
            [#\(        (begin (push-mode! find-endparen) (token 'STRING lexeme))]
            [#\)        (token-UNQUOTE!)]
            [line-break error-missing-endparen]
-           [(eof)      error-missing-endparen]))))
+           [(eof)      error-missing-endparen]))
 
 (define-macro g-line
   #'(g-lex ()))
