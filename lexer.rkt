@@ -55,14 +55,14 @@
    [      s-quote          s-str]
    [      d-quote          d-str]
    [        grave          g-str]
-   ["(:" (list (token-LPAREN!) (token 'PROTON '|:|))]
    ["{," (list (token-LBRACE!) (token 'IT     '|,|))]
-   [#\(        (token-LPAREN!)]
-   [#\)        (token-RPAREN!)]
+   ["(:" (list token-LPAREN    (token 'PROTON '|:|))]
+   [#\(        token-LPAREN]
+   [#\)        token-RPAREN]
+   [#\[        token-LBRACKET]
+   [#\]        token-RBRACKET]
    [#\{        (token-LBRACE!)]
    [#\}        (token-RBRACE!)]
-   [#\[        (token-LBRACKET!)]
-   [#\]        (token-RBRACKET!)]
    [#\.        (token 'DOT       '|.|)]
    [#\:        (token 'COLON     '|:|)]
    [#\;        (token 'SEMICOLON '|;|)]
@@ -292,38 +292,26 @@
                               (> _dent _level))
                          (token-STRING (- _dent _level) #\tab)))))
 
-(define (open-group! TOKEN)
-  (push! _indents _level)
-  TOKEN)
+(define token-LPAREN
+  (token 'LPAREN '|(|))
 
-(define-macro (close-group! TOKEN)
-  #'(let ([expected-level (if (empty? _indents)
-                              (error "No matching pair")
-                              (pop! _indents))])
-      (if (> _level expected-level)
-          (append (dedent-to! expected-level)
-                  (list TOKEN))
-          TOKEN)))
+(define token-RPAREN
+  (token 'RPAREN '|)|))
 
-(define-macro (token-LPAREN!)
-  #'(open-group! (token 'LPAREN '|(|)))
+(define token-LBRACKET
+  (token 'LBRACKET '|[|))
 
-(define-macro (token-RPAREN!)
-  #'(close-group! (token 'RPAREN '|)|)))
-
-(define-macro (token-LBRACKET!)
-  #'(open-group! (token 'LBRACKET '|[|)))
-
-(define-macro (token-RBRACKET!)
-  #'(close-group! (token 'RBRACKET '|]|)))
+(define token-RBRACKET
+  (token 'RBRACKET '|]|))
 
 (define (token-LBRACE! [lexer main-lexer])
   (push-mode! lexer)
-  (open-group! (token 'LBRACE '|{|)))
+  (token 'LBRACE '|{|))
 
-(define-macro token-RBRACE!
-  #'(cond [(empty? _modestack) (error "No matching pair")]
-          [else (pop-mode!) (close-group! (token 'RBRACE '|}|))]))
+(define-macro (token-RBRACE!)
+  #'(if (empty? _modestack) (error "No matching pair")
+        (begin (pop-mode!)
+               (token 'RBRACE '|}|))))
 
 (define-macro (token-QUOTE! LEXER)
   #'(begin (push-mode! LEXER)
