@@ -82,9 +82,10 @@ it     :            /IT
 
 string  : @graving | @str
 graving : /GRAVE @str
-str     : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
-        | /QUOTE         (STRING|interp)*                 /UNQUOTE
-interp  :  INTERPOLATE (braces|indent)
+str     : /QUOTE /INDENT  (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
+        | /QUOTE /NEWLINE (STRING|interp|NEWLINE)*         /UNQUOTE
+        | /QUOTE          (STRING|interp)*                 /UNQUOTE
+interp  : INTERPOLATE (braces|indent)
 
 atom     : /LPAREN /PROTON ((@nuclei? COLON? /SPACE COLON)? @nuclei)? /RPAREN
          | /LPAREN /PROTON            COLON                           /RPAREN

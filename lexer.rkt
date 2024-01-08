@@ -127,13 +127,11 @@
                               [(eof) (error-unterminated-string)])))
 
 (define-macro g-string
-  #'(let ([prev-token (if _last-token
-                          (token-struct-type (srcloc-token-token _last-token))
-                          #f)])
-      (if (member prev-token '(IDENTIFIER SYMBOL DOLLAR DASH SLASH QUESTION-MARK))
+  #'(let ([last-type (and _last-token (token-struct-type (srcloc-token-token _last-token)))])
+      (if (member last-type '(IDENTIFIER SYMBOL DOLLAR DASH SLASH QUESTION-MARK))
           (let ([next-char (read-char input-port)])
             (cond
-              ((equal? next-char #\() g-expr)
+              ((equal? next-char #\() g-paren)
               ((equal? next-char #\space) g-phrase)
               (else (begin (rewind! 1 empty) g-word))))
           g-line)))
@@ -144,7 +142,7 @@
 (define-macro g-phrase
   #'(g-lexer (#\space) [" ," (rewind! (token-UNQUOTE!))]))
 
-(define-macro g-expr
+(define-macro g-paren
   #'(g-lexer (#\( #\))
              [#\(        (begin (push-mode! find-endparen) (token 'STRING lexeme))]
              [#\)        (token-UNQUOTE!)]
@@ -180,10 +178,20 @@
             (minus-one-newline (extract-white! lexeme))))
 
 (define-macro g-block
-  #'(append (list (token 'GRAVE '|`|)
-                  (token-QUOTE! 'unquote-on-dedent)
-                  (indent! (blockstr+i [(eof) (dedent-to! 0)])))
-            (minus-one-newline (extract-white! lexeme))))
+  #'(let ([current-dent _dent]
+          [new-dent (measure-dent! lexeme)])
+      (if (equal? new-dent current-dent)
+          (append (list (token 'GRAVE '|`|)
+                        (token-QUOTE! 'unquote-before-dedent)
+                        token-NEWLINE)
+                  (begin
+                    (push-mode! (blockstr+i [(eof) (begin (pop-mode!)
+                                                          (cons (token-UNQUOTE!) (dedent-to! 0)))]))
+                    (minus-one-newline (extract-white! at-dent new-dent))))
+          (append (list (token 'GRAVE '|`|)
+                        (token-QUOTE! 'unquote-after-dedent)
+                        (indent! (blockstr+i [(eof) (dedent-to! 0)])))
+                  (minus-one-newline (extract-white! at-dent new-dent))))))
 
 (define-macro (append-if COND ITEM)
   #'(if COND (list ITEM) empty))
@@ -259,8 +267,12 @@
 (define (dedent!)
   (set! _level (sub1 _level))
   (pop-mode!)
-  (append (list (token 'DEDENT _mode))
-          (append-if (equal? _mode 'unquote-on-dedent) (token-UNQUOTE!))))
+  (cond
+        [(equal? _mode 'unquote-before-dedent) (list (token-UNQUOTE!)
+                                                     (token 'DEDENT _mode))]
+        [(equal? _mode 'unquote-after-dedent) (list (token 'DEDENT _mode)
+                                                    (token-UNQUOTE!))]
+        [else (list (token 'DEDENT _mode))]))
 
 (define (count-leading-tab string [start 0])
   (if (and (< start (string-length string))
@@ -331,12 +343,14 @@
       (cdr tokens)
       tokens))
 
-(define-macro (extract-white! LEXEME)
-  #'(let ([tokens (dedent-to! (min _level (measure-dent! LEXEME)))])
-      (if (and (equal? 'DEDENT (token-struct-type (car tokens)))
+(define-macro-cases extract-white!
+ [(extract-white! LEXEME) #'(extract-white! at-dent (measure-dent! LEXEME))]
+ [(extract-white! at-dent DENT)
+  #'(let ([tokens (dedent-to! (min _level DENT))])
+      (if (and (member (token-struct-type (car tokens)) '(DEDENT UNQUOTE))
                (equal? eof (peek-char input-port)))
           (cons token-NEWLINE tokens)
-          tokens)))
+          tokens))])
 
 (define-macro (escape-newlines LEXEME)
   #'(let ([current-dent _dent]
