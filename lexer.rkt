@@ -270,8 +270,8 @@
 
 (define (measure-dent! lexeme)
   (let ([lastline (last (string-split lexeme "\n" #:trim? #f))])
-      (set! _dent (count-leading-tab lastline))
-      _dent))
+    (set! _dent (count-leading-tab lastline))
+    _dent))
 
 (define-macro (dedent-to! LEVEL)
   #'(let* ([num-lines (- (position-line end-pos)
@@ -314,7 +314,7 @@
 
 (define (token-QUOTE! lexer)
   (begin (push-mode! lexer)
-           (token 'QUOTE)))
+         (token 'QUOTE)))
 
 (define (token-UNQUOTE!)
   (begin (pop-mode!)
@@ -332,7 +332,11 @@
       tokens))
 
 (define-macro (extract-white! LEXEME)
-  #'(dedent-to! (min _level (measure-dent! LEXEME))))
+  #'(let ([tokens (dedent-to! (min _level (measure-dent! LEXEME)))])
+      (if (and (equal? 'DEDENT (token-struct-type (car tokens)))
+               (equal? eof (peek-char input-port)))
+          (cons token-NEWLINE tokens)
+          tokens)))
 
 (define-macro (escape-newlines LEXEME)
   #'(let ([current-dent _dent]

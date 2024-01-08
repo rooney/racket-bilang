@@ -11,9 +11,11 @@ expres : /feeds? expr4
        | comma2|comma1|commaO|comma
        | expr1
 @expr1 : apply1
+       | exprD
+@exprD : applyD
        | exprO
 @exprO : applyO
-       | ion|anion
+       | ion
        | expr0
 @expr0 : apply0
        | dot|slash
@@ -23,13 +25,13 @@ expres : /feeds? expr4
 @exprL : exprl|break1|breakO|break
 @exprI : exprl|commaI|applyI|explI
 
-explI  :                 rad kwargs
-       |  exprl /SPACE   rad kwargs?
-       | (exprl /SPACE)? rad kwargs? (spaceI|/SPACE atom)
-       | (exprl /SPACE)? rad kwargs? 
-expl2  :                 rad kwargs
-       |  exprL /SPACE   rad kwargs?
-       | (exprL /SPACE)? rad kwargs? (space2|/SPACE (atom|expr2))
+explI  :                 tetrad kwargs
+       |  exprl /SPACE   tetrad kwargs?
+       | (exprl /SPACE)? tetrad kwargs? (spaceI|/SPACE atom)
+       | (exprl /SPACE)? tetrad kwargs? 
+expl2  :                 tetrad kwargs
+       |  exprL /SPACE   tetrad kwargs?
+       | (exprL /SPACE)? tetrad kwargs? (space2|/SPACE (atom|expr2))
 
 comma  : (commaO|comma1|expr1) /SPACE? /COMMA
 comma_ : (commaO|comma1|expr1) /SPACE  /COMMA
@@ -42,58 +44,61 @@ commaI : (@comma|commaO) kwargs? spaceI | @comma_  kvI
 comma1 : (@comma|commaO) kwargs? space1 | @comma_ (kv|exprO)
 break1 : (@break|breakO) kwargs? space1 | @break_ (kv|exprO)
 break2 : (@break|breakO) kwargs? space2 | @break_  kv2 
-       |                              exprB /feeds kv2
+       |                            exprB /feeds kv2
 apply3 : (exprB|rad) (/SPACE key /COLON)? /feeds expr3
-apply2 :  exprO kwargs? space2
-apply1 :  exprO kwargs? space1
-applyI :  exprO kwargs? spaceI
-applyO :  anion (id|string|group) group*
-       |    ion e group*
-apply0 :  expr0 (dot|slash|rad|group)+
+apply2 :  exprD kwargs? space2
+apply1 :  exprD kwargs? space1
+applyI :  exprD kwargs? spaceI
+applyD :  def exprD
+applyO :  anion group+
+       |  ion e group*
+apply0 :  expr0 (group|dot|slash|rad)+
        |  exprO string
        |  rad e
-       |  (int|dec) id
-@e     :   int|dec|id
-       |   string
-       |   group
+       |  rad? (int|dec) id
+@e     :        int|dec|id
+       |        string
+       |        group
 
 int    :  INTEGER
 dec    :  DECIMAL
-rad    :  atom
-       |  DOT @key? COLON
+tetrad :  def|atom|anion|rad
        |  LPAREN RPAREN
        |  LBRACE RBRACE
-       | (DOLLAR|DASH|SLASH|SYMBOL|QUESTION-MARK) PRIME?
+rad    : (DOLLAR|DASH|SLASH|SYMBOL|QUESTION-MARK) PRIME?
 nuclei : (DOLLAR|DASH)? IDENTIFIER (QUESTION-MARK|DASH)? PRIME?
-id     :  IDENTIFIER PRIME?
-ion    :      /COLON (COLON|@key)
-anion  :      /COLON
-kv     : @key /COLON        exprO
-kvI    : @key /COLON /SPACE exprI
-kv2    : @key /COLON /SPACE expr2
-       | @key /COLON @indent
-key    :  @rad | @id
-slash  :    /SLASH @id
-dot    :      /DOT @id
-it     : /IT
-interp :  INTERPOLATE (braces|indent)
-str    : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
-       | /QUOTE         (STRING|interp)*                 /UNQUOTE
-string : @graving | @str
-graving  : /GRAVE @str
+id     :                IDENTIFIER PRIME?
+ion    :          /COLON (COLON|@key)
+anion  :          /COLON
+def    : DOT @key? COLON
+kv     :     @key /COLON        exprO
+kvI    :     @key /COLON /SPACE exprI
+kv2    :     @key /COLON /SPACE expr2
+       |     @key /COLON @indent
+key    :          @rad | @id
+slash  :          /SLASH @id
+dot    :            /DOT @id
+it     :            /IT
+
+string  : @graving | @str
+graving : /GRAVE @str
+str     : /QUOTE /INDENT (STRING|interp|NEWLINE)* /DEDENT /UNQUOTE
+        | /QUOTE         (STRING|interp)*                 /UNQUOTE
+interp  :  INTERPOLATE (braces|indent)
+
 atom     : /LPAREN /PROTON ((@nuclei? COLON? /SPACE COLON)? @nuclei)? /RPAREN
          | /LPAREN /PROTON            COLON                           /RPAREN
 parens   : /LPAREN  (subexpr|rad) /RPAREN
-braces   : /LBRACE   subexpr        /RBRACE
-brackets : /LBRACKET array?         /RBRACKET
+braces   : /LBRACE   subexpr      /RBRACE
+brackets : /LBRACKET array?       /RBRACKET
 @group   :  parens | braces | brackets
 @subexpr :  /SPACE? expr4                | indent /feeds
 @space2  :  /SPACE          (kv2|apply2) | indent
 @spaceI  :  /SPACE (expr1|kv|kvI|applyI)
 @space1  :  /SPACE (expr1|kv)
-kwargs   : (/SPACE        kv)+
+@kwargs  : (/SPACE        kv)+
 @array   :  /SPACE  exprI                        (/NEWLINE /SPACE? /COMMA  /SPACE exprI)*   /SPACE
-         |          exprO (/SPACE exprO)*        (/NEWLINE                (/SPACE exprO)+)*
+         |          exprD (/SPACE exprD)*        (/NEWLINE                (/SPACE exprD)+)*
          | /INDENT /COMMA (/SPACE exprI|@indent) (/NEWLINE /COMMA (@indent|/SPACE exprI))*  /DEDENT /NEWLINE
 indent   : /INDENT @expres   /DEDENT
 pseudent : /INDENT pseudent? /DEDENT
